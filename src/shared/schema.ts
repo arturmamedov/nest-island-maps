@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import hostelsFile from '../../data/hostels.json';
 import iconsFile from '../../data/icons.json';
+import { ISLAND_IDS, LAYERS } from './ids.js';
 import {
   ARTBOARD,
   DECOR_SIZE,
@@ -21,12 +22,9 @@ import {
    theme. The refinements (hostel ↔ island, unique ids, route endpoints, the
    Ibiza firewall) cannot be expressed in JSON Schema and only live here. */
 
-export const ISLAND_IDS = ['tenerife', 'gran_canaria', 'ibiza'] as const;
+export { ISLAND_IDS, LAYERS };
 export const IslandIdSchema = z.enum(ISLAND_IDS);
 export type IslandId = z.infer<typeof IslandIdSchema>;
-
-/** The two maps drawn from each island file. Decor is shared between them. */
-export const LAYERS = ['hostels', 'attractions'] as const;
 export type Layer = (typeof LAYERS)[number];
 
 export const SIDES = ['below', 'above', 'right', 'left'] as const;
