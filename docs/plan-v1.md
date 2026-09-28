@@ -1,6 +1,6 @@
 # Nest Island Maps — v1 implementation plan
 
-> **Status:** approved by the owner on 2026-09-27. M1 done on 2026-09-27 (branch `feat/v1`, commits `c10c8f2`…`3539c25`). M2 is next.
+> **Status:** approved by the owner on 2026-09-27. M1 done on 2026-09-27 (branch `feat/v1`, commits `c10c8f2`…`3539c25`). M2 done on 2026-09-28 (commits `ec13684`…`8f8e48e`). M3 is next.
 
 ## Context
 
@@ -98,7 +98,8 @@ src/shared/                     DOM-free
   coords.ts    paste parser
   cluster.ts   single-linkage < 14px, mean position
   labels.ts    TextMeasurer type, pill metrics, side anchors (pin / dot / badge), clamp, leader rule
-  layout.ts    computeMapLayout(geometry, data, settings, layer, measure) → rounded primitives
+  layout.ts    computeMapLayout(geometry, data, layer, measure) → rounded primitives (settings from data.settings)
+  ids.ts       ISLAND_IDS, LAYERS (JSON-free, so Playwright specs can import them)
   islands.ts   registry id → name, geometry, seed;  filename.ts
 src/map/       IslandMap.tsx (THE renderer), measure.ts (canvas measureText), fonts.ts (fontsVersion hook), embedFonts.ts
 src/export/    svg.ts, raster.ts, json.ts, download.ts
@@ -137,7 +138,8 @@ TDD applies to the `src/shared/` and `scripts/geometry/` modules.
   - Generated schema is up to date.
 - **Verify:** `npm run typecheck; npm test; npm run build`.
 
-### M2 – Layout + renderer + render page
+### M2 – Layout + renderer + render page (done 2026-09-28)
+- **Done as planned**, plus `src/shared/ids.ts`, `src/export/svg.ts` (the pure string part) and a Montserrat snapshot variant. 185 new unit tests (254 in all) and 6 render goldens. The renderer decisions are in `docs/decisions.md` under "Map".
 - **Work:** `cluster.ts`, `labels.ts`, `layout.ts`, `IslandMap.tsx`, `measure.ts`, `fonts.ts`, `render.html`, `playwright.config.ts`.
 - **Tests:**
   - El Médano is 3 hostels → 1 pin.
