@@ -7,3 +7,6 @@ export const ISLAND_IDS = ['tenerife', 'gran_canaria', 'ibiza'] as const;
 
 /** The two maps drawn from each island file. Decor is shared between them. */
 export const LAYERS = ['hostels', 'attractions'] as const;
+
+/** What the editor calls each map; "Things to do" is the spec's name for the attractions map. */
+export const LAYER_LABELS = { hostels: 'Hostels', attractions: 'Things to do' } as const satisfies Record<(typeof LAYERS)[number], string>;
