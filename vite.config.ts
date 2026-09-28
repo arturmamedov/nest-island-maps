@@ -13,6 +13,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(import.meta.dirname, 'index.html'),
+        // The bare map page the Playwright goldens screenshot.
+        render: resolve(import.meta.dirname, 'render.html'),
       },
     },
   },

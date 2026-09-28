@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Island map render</title>
+    <!-- A bare map for the Playwright goldens: transparent page, the SVG at artboard size. -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: transparent;
+      }
+      svg {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/render/main.tsx"></script>
+  </body>
+</html>
