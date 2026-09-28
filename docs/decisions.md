@@ -51,7 +51,7 @@ Where the app deliberately differs from the handoff prototype (`design_handoff_i
 - **PNG and JPG rasterise the web SVG:** Blob URL → `<img>` → `decode()` → canvas at 2160. The JPG fills white first and uses quality 0.92. No `modern-screenshot`.
 - **Installed fonts can hide a missing embedding.** The owner's machine has all four label faces and Montserrat installed, and an SVG in an `<img>` may draw with those. So `tests/render/export.spec.ts` also renames every family, in the rules and the text alike. The web SVG must still match Chromium's own rendering, and without its `<style>` it must not.
 - **The PNG fidelity check covers all six maps,** not only Tenerife Hostels. At M3 each differed from Chromium's DPR-2 screenshot by 0–6 pixels out of 4.67 million.
-- **Copy SVG copies the Figma SVG,** which pastes into Figma or code, as in the prototype, and carries no base64 fonts. The Windows clipboard stores it with CRLF line ends.
+- **Copy SVG copies the Figma SVG,** which pastes into Figma or code, as in the prototype, and carries no base64 fonts. On Windows, Chromium writes clipboard text with CRLF line ends, so a paste reads back with CRLF.
 - **Download JSON is `serializeDataFile`,** so it is the seed's bytes, with no second serializer.
 - **`react-dom/server` stays out of the editor's first load.** `src/export/svg.ts` is imported dynamically when an export runs. `tests/render/bundle.spec.ts` follows the entry script's static imports and holds this.
 - **A download's object URL is revoked after 1.5 s,** as in the prototype, not during the click. Revoking it then can cancel the download.

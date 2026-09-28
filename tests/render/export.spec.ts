@@ -182,7 +182,7 @@ test('Copy SVG puts the Figma SVG on the clipboard', async ({ page, context }) =
   const figma = (await download(page, 'SVG (Figma)')).bytes.toString('utf8');
   await page.getByRole('button', { name: 'Copy SVG', exact: true }).click();
   await expect(page.getByRole('status')).toHaveText('SVG copied — paste into Figma or code');
-  // The Windows clipboard stores text with CRLF line ends; the markup is otherwise the same.
+  // Chromium on Windows writes clipboard text with CRLF line ends; the markup is otherwise the same.
   expect((await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n')).toBe(figma);
 });
 

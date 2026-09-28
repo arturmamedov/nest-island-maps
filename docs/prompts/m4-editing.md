@@ -76,11 +76,11 @@ Milestones 1 (scaffold, data, schema), 2 (layout, renderer, render page, goldens
 
 - **Installed fonts hide a missing embedding.** The owner's machine has all four label faces and Montserrat installed, so an SVG in an `<img>` can look right without its `<style>`. Keep the renamed-families check in `export.spec.ts`.
 - **`font-family` is unquoted in the SVG,** because React escapes quotes. A family word that starts with a digit voids the whole declaration.
-- **The Windows clipboard stores text with CRLF line ends.**
+- **Chromium on Windows writes clipboard text with CRLF line ends** (Blink converts the newlines, even in headless runs). Compare clipboard reads after turning CRLF into LF.
 - **Playwright's ESM loader refuses JSON imports.** Specs may import `ids.ts`, `tokens.ts` and `filename.ts`. A type-only import from `schema.ts` is erased, which is fine; a value import is not. Read island names from `data/geometry/*.geo.json` with `fs`.
 - **Playwright sanitises `_` to `-`** in snapshot names.
 - **Port 8798:** `reuseExistingServer` is false, so a `vite preview` left running makes `npm run test:render` fail with "already used". Ask the owner to stop it; don't reuse it and don't change the port.
-- **Fonts before measuring:** labels are measured with canvas `measureText`. Call `loadMapFonts` with the real, uppercased labels before measuring. That matters when a new label font is chosen in settings.
+- **Fonts before measuring:** labels are measured with canvas `measureText`. Call `loadMapFonts` with the real labels before measuring; it uppercases them itself, since `document.fonts.load` fetches only the subsets the sample text touches. That matters when a new label font is chosen in settings.
 - **React never self-closes** in static markup (`<rect …></rect>`), and **the renderer does no maths**: every number is rounded in `layout.ts`.
 - **Vitest inlines `?url` and node_modules JSON imports,** so modules that use them run in Node tests.
 - **Playwright contexts start with empty `localStorage`.** Once autosave exists, `export.spec`'s "Download JSON = seed bytes" still holds in a fresh context. Keep it that way: never seed a draft in a shared fixture.
