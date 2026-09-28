@@ -1,0 +1,44 @@
+{
+  "name": "nest-island-maps",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Internal mini-app: Nests Hostels island maps (Tenerife, Gran Canaria, Ibiza) drawn from data, exported as SVG, PNG, JPG and JSON.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit",
+    "test": "vitest run",
+    "test:render": "npm run build && playwright test",
+    "gen": "tsx scripts/gen-shared.ts",
+    "sync:hostels": "tsx scripts/sync-hostels.ts",
+    "geometry": "tsx scripts/build-geometry.ts"
+  },
+  "dependencies": {
+    "@fontsource/archivo-black": "5.3.0",
+    "@fontsource/montserrat": "5.3.0",
+    "@fontsource/poppins": "5.3.0",
+    "@fontsource/roboto-condensed": "5.3.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "^26.6.1",
+    "@types/pngjs": "^6.0.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "pixelmatch": "^7.2.0",
+    "pngjs": "^7.0.0",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^4.1.11"
+  }
+}
