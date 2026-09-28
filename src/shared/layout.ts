@@ -1,5 +1,5 @@
 import { clusterHostels } from './cluster.js';
-import { parsePolygons, pointInPolygons, project, type Point, type Polygon } from './geo.js';
+import { pathPolygons, pointInPolygons, project, type Point } from './geo.js';
 import { ICONS } from './icons.js';
 import { labelLook, labelWidth, pillMetrics, placeLabel, type Leader, type MarkerKind, type TextMeasurer } from './labels.js';
 import type { Geometry, IslandData, Layer, LabelPlacement, ShowOn } from './schema.js';
@@ -70,13 +70,6 @@ export type MapLayout = {
 /** The badge's icon: 26 px inside the r 22 circle, centred. */
 export const BADGE_ICON = { offset: -BADGE.iconSize / 2, scale: m2(BADGE.iconSize / ICON_BOX) } as const;
 
-const polygonCache = new Map<string, Polygon[]>();
-function polygons(d: string): Polygon[] {
-  let p = polygonCache.get(d);
-  if (!p) polygonCache.set(d, (p = parsePolygons(d)));
-  return p;
-}
-
 const showsOn = (showOn: ShowOn, layer: Layer) => showOn === 'both' || showOn === layer;
 
 /* Plan decision 5: decor turns white where the rings actually drawn behind it
@@ -84,10 +77,10 @@ const showsOn = (showOn: ShowOn, layer: Layer) => showOn === 'both' || showOn ==
    is 1 − Π(1 − opacity); ring-3 + ring-4 give 0.44, but only with all four
    rings shown. The epsilon absorbs 1 − 0.7·0.8 = 0.43999…. */
 function decorColor(geometry: Geometry, shownRings: number, p: Point, ink: string): string {
-  if (pointInPolygons(polygons(geometry.island), p.x, p.y)) return ink;
+  if (pointInPolygons(pathPolygons(geometry.island), p.x, p.y)) return ink;
   let clear = 1;
   for (let i = 0; i < shownRings; i++) {
-    if (pointInPolygons(polygons(geometry.rings[i]!.d), p.x, p.y)) clear *= 1 - RING_OPACITY[i]!;
+    if (pointInPolygons(pathPolygons(geometry.rings[i]!.d), p.x, p.y)) clear *= 1 - RING_OPACITY[i]!;
   }
   return 1 - clear >= ON_DARK_ALPHA - 1e-9 ? WHITE : ink;
 }

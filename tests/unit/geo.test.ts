@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { fitProjection, parsePolygons, pointInPolygons, project, unproject } from '../../src/shared/geo.js';
+import { fitProjection, isOnLand, parsePolygons, pathPolygons, pointInPolygons, project, unproject } from '../../src/shared/geo.js';
 import { ISLAND_IDS, type IslandId } from '../../src/shared/schema.js';
 import { ISLANDS } from '../../src/shared/islands.js';
 
@@ -72,16 +72,20 @@ describe('polygons', () => {
     expect(pointInPolygons(square, -1, -1)).toBe(false);
   });
 
-  it('knows which Tenerife hostels sit on the island', () => {
+  it('parses each path once', () => {
+    const d = ISLANDS.tenerife.geometry.island;
+    expect(pathPolygons(d)).toBe(pathPolygons(d));
+  });
+
+  it('knows which Tenerife hostels sit on the island (the "in the sea" badge)', () => {
     const { geometry, seed } = ISLANDS.tenerife;
-    const land = parsePolygons(geometry.island);
     const on = (slug: string) => {
       const h = seed.hostels.find((x) => x.slug === slug)!;
-      const { x, y } = project(geometry.projection, h.lat, h.lng);
-      return pointInPolygons(land, x, y);
+      return isOnLand(geometry, h.lat, h.lng);
     };
     expect(on('adeje-nest')).toBe(true);
     // Approximate coordinates that project just offshore until the owner verifies them.
     expect(on('puerto-nest')).toBe(false);
+    expect(on('las-eras-nest')).toBe(false);
   });
 });

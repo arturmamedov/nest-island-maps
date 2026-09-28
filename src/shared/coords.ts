@@ -7,10 +7,18 @@ import { ARTBOARD } from './tokens.js';
 
 export type CoordsResult = { ok: true; lat: number; lng: number } | { ok: false; error: string };
 
+/** Why an off-artboard point is refused; the edits reuse it. */
+export const OFF_MAP = 'That point is off the map: are lat and lng swapped?';
 const PAIR = /^(-?\d+(?:\.\d+)?)\s*(?:[,;]\s*|\s+)(-?\d+(?:\.\d+)?)$/;
 const LINK = /@|https?:|maps\.|goo\.gl/i;
 
 const fail = (error: string): CoordsResult => ({ ok: false, error });
+
+/** Whether a point projects onto the 1080 artboard. The edits refuse off-map numbers with this same rule. */
+export function onArtboard(projection: ProjectionConstants, lat: number, lng: number): boolean {
+  const { x, y } = project(projection, lat, lng);
+  return x >= 0 && x <= ARTBOARD && y >= 0 && y <= ARTBOARD;
+}
 
 /** With a projection, also refuses points off the artboard (usually lat and lng swapped). */
 export function parseCoords(text: string, projection?: ProjectionConstants): CoordsResult {
@@ -23,10 +31,7 @@ export function parseCoords(text: string, projection?: ProjectionConstants): Coo
   const lng = Number(m[2]);
   if (Math.abs(lat) > 90) return fail('Latitude runs from -90 to 90');
   if (Math.abs(lng) > 180) return fail('Longitude runs from -180 to 180');
-  if (projection) {
-    const { x, y } = project(projection, lat, lng);
-    if (!(x >= 0 && x <= ARTBOARD && y >= 0 && y <= ARTBOARD)) return fail('That point is off the map: are lat and lng swapped?');
-  }
+  if (projection && !onArtboard(projection, lat, lng)) return fail(OFF_MAP);
   return { ok: true, lat, lng };
 }
 

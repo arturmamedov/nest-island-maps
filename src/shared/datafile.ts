@@ -31,6 +31,9 @@ export function serializeDataFile(data: IslandData, geometry: Geometry): string 
 
 const PROJECTION_KEYS = ['s', 'lamC', 'mC', 'cx', 'cy'] as const;
 
+/** One schema issue as staff read it: "hostels.2.lat: …". */
+export const issueText = (i: { path: readonly PropertyKey[]; message: string }) => (i.path.length ? `${i.path.map(String).join('.')}: ${i.message}` : i.message);
+
 /** Validates a seed, a draft or an imported file for one island. */
 export function parseDataFile(json: unknown, island: IslandRef): ParseResult {
   if (json && typeof json === 'object' && 'island' in json && json.island !== island.id) {
@@ -39,7 +42,7 @@ export function parseDataFile(json: unknown, island: IslandRef): ParseResult {
   }
   const r = IslandDataSchema.safeParse(json);
   if (!r.success) {
-    const lines = r.error.issues.slice(0, 3).map((i) => (i.path.length ? `${i.path.join('.')}: ${i.message}` : i.message));
+    const lines = r.error.issues.slice(0, 3).map(issueText);
     const more = r.error.issues.length > 3 ? ` (+${r.error.issues.length - 3} more)` : '';
     return { ok: false, error: lines.join('; ') + more };
   }

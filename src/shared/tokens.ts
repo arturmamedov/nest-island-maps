@@ -60,6 +60,8 @@ export const LABEL_GAP = 8;
 export const LABEL_BOX = { x0: 12, x1: 1068, y0: 12, y1: 1040 } as const;
 export const LEADER = { minOffset: 6, width: 2.5 } as const;
 export const ROUTE = { width: 2.5, dash: '7 7', opacity: 0.85 } as const;
+/** How far a route's control point leaves the straight line, as a share of half its length. */
+export const ROUTE_BEND = { min: -1, max: 1 } as const;
 
 /* ODbL: this credit stays on every published map. */
 export const ATTRIBUTION = {

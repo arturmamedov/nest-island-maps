@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import hostelsFile from '../../data/hostels.json';
 import iconsFile from '../../data/icons.json';
-import { ISLAND_IDS, LAYERS } from './ids.js';
+import { ISLAND_IDS, LAYERS, SHOW_ON } from './ids.js';
 import {
   ARTBOARD,
   DECOR_SIZE,
@@ -14,6 +14,7 @@ import {
   PALETTE_IDS,
   PIN_SIZE,
   RING_COUNT,
+  ROUTE_BEND,
 } from './tokens.js';
 
 /* The source of truth for every island file (handoff README §3): the seeds,
@@ -22,14 +23,13 @@ import {
    theme. The refinements (hostel ↔ island, unique ids, route endpoints, the
    Ibiza firewall) cannot be expressed in JSON Schema and only live here. */
 
-export { ISLAND_IDS, LAYERS };
+export { ISLAND_IDS, LAYERS, SHOW_ON };
 export const IslandIdSchema = z.enum(ISLAND_IDS);
 export type IslandId = z.infer<typeof IslandIdSchema>;
 export type Layer = (typeof LAYERS)[number];
 
 export const SIDES = ['below', 'above', 'right', 'left'] as const;
 export type Side = (typeof SIDES)[number];
-export const SHOW_ON = ['both', 'hostels', 'attractions'] as const;
 export type ShowOn = (typeof SHOW_ON)[number];
 export const LABEL_STYLES = ['accent', 'white', 'dark', 'text'] as const;
 export type LabelStyle = (typeof LABEL_STYLES)[number];
@@ -46,16 +46,41 @@ const HOSTEL_SLUGS = hostelsFile.hostels.map((h) => h.slug) as [string, ...strin
 const HOSTEL_ISLAND = new Map(hostelsFile.hostels.map((h) => [h.slug, h.island]));
 export const HostelSlugSchema = z.enum(HOSTEL_SLUGS);
 
+export type CanonicalHostel = { slug: string; name: string; island: IslandId };
+/** Every real hostel, in data/hostels.json order: the only ones "+ Add hostel" may offer. */
+export const CANONICAL_HOSTELS: readonly CanonicalHostel[] = z
+  .array(z.object({ slug: HostelSlugSchema, name: z.string().min(1), island: IslandIdSchema }))
+  .parse(hostelsFile.hostels);
+
+/** The real hostels of one island. */
+export const canonicalHostels = (island: IslandId): CanonicalHostel[] => CANONICAL_HOSTELS.filter((h) => h.island === island);
+
 const id = z.string().regex(/^[a-z][a-z0-9-]*$/, 'Use lowercase letters, digits and dashes');
-/* Stored as typed (mixed case) and uppercased in JS at render. NFC, because a
-   pasted "é" can arrive as e + a combining accent the fonts do not carry. */
-const label = z
+/** A map label: stored as typed (mixed case) and uppercased in JS at render.
+    NFC, because a pasted "é" can arrive as e + a combining accent the fonts do not carry. */
+export const LabelSchema = z
   .string()
   .trim()
   .normalize()
   .min(1, 'A label cannot be empty')
-  .max(LABEL_MAX)
+  .max(LABEL_MAX, `At most ${LABEL_MAX} characters`)
   .regex(LABEL_CHARSET, 'Uses a character the label fonts cannot draw');
+
+const NEST_PASS_MESSAGE = 'Nest Pass content is not allowed on an Ibiza map';
+/** The Ibiza firewall (CLAUDE.md): the islands where no Nest Pass content may appear. */
+const firewalled = (island: IslandId) => island === 'ibiza';
+
+export type LabelResult = { ok: true; label: string } | { ok: false; error: string };
+
+/* The row input and the edits both ask this, so a label the list accepts is
+   exactly one the file accepts: the label rule plus the Ibiza firewall. */
+/** Checks one label for an island; `label` is the trimmed, NFC form to store. */
+export function parseLabel(text: string, island: IslandId): LabelResult {
+  const r = LabelSchema.safeParse(text);
+  if (!r.success) return { ok: false, error: r.error.issues[0]!.message };
+  if (firewalled(island) && NEST_PASS.test(r.data)) return { ok: false, error: NEST_PASS_MESSAGE };
+  return { ok: true, label: r.data };
+}
 const lat = z.number().min(-90).max(90);
 const lng = z.number().min(-180).max(180);
 
@@ -70,7 +95,7 @@ export type LabelPlacement = z.infer<typeof LabelPlacementSchema>;
 export const HostelSchema = z.object({
   slug: HostelSlugSchema,
   /** The short map label ("El Duque" for duque-nest). */
-  label,
+  label: LabelSchema,
   lat,
   lng,
   /** False until the owner replaces the approximation with the property's real map pin. */
@@ -82,7 +107,7 @@ export type Hostel = z.infer<typeof HostelSchema>;
 
 export const AttractionSchema = z.object({
   id,
-  label,
+  label: LabelSchema,
   lat,
   lng,
   icon: IconIdSchema,
@@ -107,7 +132,7 @@ export const RouteSchema = z.object({
   from: HostelSlugSchema,
   to: HostelSlugSchema,
   /** −1…1: how far the quadratic's control point leaves the straight line. */
-  bend: z.number().min(-1).max(1),
+  bend: z.number().min(ROUTE_BEND.min).max(ROUTE_BEND.max),
   showOn: z.enum(SHOW_ON),
   visible: z.boolean(),
 });
@@ -173,7 +198,7 @@ function noDuplicates(items: readonly Record<string, unknown>[], key: string, co
 
 function nestPassStrings(value: unknown, path: (string | number)[], ctx: Ctx) {
   if (typeof value === 'string') {
-    if (NEST_PASS.test(value)) ctx.addIssue({ code: 'custom', path, message: 'Nest Pass content is not allowed on an Ibiza map' });
+    if (NEST_PASS.test(value)) ctx.addIssue({ code: 'custom', path, message: NEST_PASS_MESSAGE });
   } else if (Array.isArray(value)) {
     value.forEach((v, i) => nestPassStrings(v, [...path, i], ctx));
   } else if (value && typeof value === 'object') {
@@ -203,7 +228,7 @@ export const IslandDataSchema = IslandDataObject.superRefine((d, ctx) => {
   });
 
   // The Ibiza firewall (CLAUDE.md): no Nest Pass content on any Ibiza map.
-  if (d.island === 'ibiza') nestPassStrings(d, [], ctx);
+  if (firewalled(d.island)) nestPassStrings(d, [], ctx);
 }).meta({
   title: 'Nest island map data',
   description:

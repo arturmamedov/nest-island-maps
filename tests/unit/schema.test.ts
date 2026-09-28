@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import hostelsFile from '../../data/hostels.json';
 import { parseDataFile, serializeDataFile } from '../../src/shared/datafile.js';
 import { ISLANDS } from '../../src/shared/islands.js';
-import { IslandDataSchema, type IslandData } from '../../src/shared/schema.js';
+import { CANONICAL_HOSTELS, canonicalHostels, IslandDataSchema, parseLabel, type IslandData } from '../../src/shared/schema.js';
 
 /* The integrity rules zod enforces on every island file: the seed, the
    autosaved draft and any imported JSON all go through IslandDataSchema. */
@@ -89,6 +90,51 @@ describe('IslandDataSchema', () => {
     const d = tenerife();
     d.attractions[0]!.label = 'Nest Pass tour';
     expect(issues(d)).toEqual([]);
+  });
+});
+
+/* The label rule on its own, for the row input and the edits: the same rule
+   the schema applies to a whole file, plus the Ibiza firewall. */
+describe('parseLabel', () => {
+  it('keeps the case as typed, trims and NFC-normalises', () => {
+    expect(parseLabel('  El Médano ', 'tenerife')).toEqual({ ok: true, label: 'El Médano' });
+  });
+
+  it('refuses an empty label', () => {
+    const r = parseLabel('   ', 'tenerife');
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(/empty/i);
+  });
+
+  it('refuses more than 40 characters, saying so', () => {
+    expect(parseLabel('x'.repeat(40), 'tenerife').ok).toBe(true);
+    const r = parseLabel('x'.repeat(41), 'tenerife');
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe('At most 40 characters');
+  });
+
+  it('refuses characters the label fonts cannot draw', () => {
+    const r = parseLabel('Teide 🌋', 'tenerife');
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(/character/i);
+  });
+
+  it('refuses Nest Pass on Ibiza only', () => {
+    const r = parseLabel('Nest  pass tour', 'ibiza');
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(/Nest Pass/);
+    expect(parseLabel('Nest Pass tour', 'tenerife').ok).toBe(true);
+  });
+});
+
+describe('canonical hostels', () => {
+  it('are data/hostels.json, in its order', () => {
+    expect(CANONICAL_HOSTELS).toEqual(hostelsFile.hostels);
+  });
+
+  it('are listed per island', () => {
+    expect(canonicalHostels('ibiza').map((h) => h.slug)).toEqual(['cisne-nest', 'flamingo-nest']);
+    expect(canonicalHostels('tenerife')).toHaveLength(9);
   });
 });
 

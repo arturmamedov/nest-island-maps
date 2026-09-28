@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCoords, parseCoords } from '../../src/shared/coords.js';
+import { formatCoords, onArtboard, parseCoords } from '../../src/shared/coords.js';
 import { ISLANDS } from '../../src/shared/islands.js';
 
 const tenerife = ISLANDS.tenerife.geometry.projection;
@@ -46,6 +46,14 @@ describe('parseCoords', () => {
     const swapped = parseCoords('-16.5355, 28.047', tenerife);
     expect(swapped.ok).toBe(false);
     if (!swapped.ok) expect(swapped.error).toMatch(/off the map/i);
+  });
+});
+
+describe('onArtboard', () => {
+  it('is the parser rule on numbers: the edits refuse off-map points with it', () => {
+    expect(onArtboard(tenerife, 28.047, -16.5355)).toBe(true);
+    expect(onArtboard(tenerife, -16.5355, 28.047)).toBe(false);
+    expect(onArtboard(tenerife, 28.047, Number.NaN)).toBe(false);
   });
 });
 

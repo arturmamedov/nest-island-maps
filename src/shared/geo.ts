@@ -88,3 +88,19 @@ export function pointInPolygons(polygons: readonly Polygon[], x: number, y: numb
   }
   return inside;
 }
+
+// The geometry paths never change at run time, and every map redraw tests points against them.
+const polygonCache = new Map<string, Polygon[]>();
+
+/** parsePolygons, memoised per path string. */
+export function pathPolygons(d: string): Polygon[] {
+  let p = polygonCache.get(d);
+  if (!p) polygonCache.set(d, (p = parsePolygons(d)));
+  return p;
+}
+
+/** Whether a lat/lng projects onto the island's coastline polygon (the "in the sea" badge). */
+export function isOnLand(geometry: { island: string; projection: ProjectionConstants }, lat: number, lng: number): boolean {
+  const { x, y } = project(geometry.projection, lat, lng);
+  return pointInPolygons(pathPolygons(geometry.island), x, y);
+}
