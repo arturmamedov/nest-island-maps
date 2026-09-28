@@ -1,6 +1,6 @@
 # M3: export and the minimal shell
 
-> **Status:** open. Written 2026-09-28, after M2.
+> **Status:** done, 2026-09-28. Written 2026-09-28, after M2.
 
 You are continuing **Nest Island Maps** in `A:\serverpath\laragon\nest-island-maps`, on branch `feat/v1`. It's an internal static site (Vite + React + TypeScript) that draws the Nests Hostels island maps (Tenerife, Gran Canaria, Ibiza) from data and exports them as SVG, PNG, JPG and JSON.
 

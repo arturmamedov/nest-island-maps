@@ -1,6 +1,6 @@
 # Nest Island Maps — v1 implementation plan
 
-> **Status:** approved by the owner on 2026-09-27. M1 done on 2026-09-27 (branch `feat/v1`, commits `c10c8f2`…`3539c25`). M2 done on 2026-09-28 (commits `ec13684`…`8f8e48e`). M3 is next.
+> **Status:** approved by the owner on 2026-09-27. M1 done on 2026-09-27 (branch `feat/v1`, commits `c10c8f2`…`3539c25`). M2 done on 2026-09-28 (commits `ec13684`…`8f8e48e`). M3 done on 2026-09-28 (commits `9f5755d`…`b8f74e2`). M4 is next.
 
 ## Context
 
@@ -151,8 +151,14 @@ TDD applies to the `src/shared/` and `scripts/geometry/` modules.
   - Playwright golden screenshots for the 6 maps.
 - **Verify:** `npm test; npm run test:render`. Compare in Chrome against `design_handoff_island_maps/reference/original-*.png`.
 
-### M3 – Export + minimal shell
+### M3 – Export + minimal shell (done 2026-09-28)
 Export comes before editing because font-embedded rasterising is the riskiest piece.
+- **Done as planned,** plus a few additions:
+  - separate names for the web SVG (`-web.svg`);
+  - the fidelity check on all six maps;
+  - a renamed-families check, because installed fonts can hide a missing embedding;
+  - a bundle check that keeps `react-dom/server` out of the editor's first load.
+  - Tests: 39 new unit tests (293 in all) and 13 new render checks (19 in all). The decisions are in `docs/decisions.md` under "Export" and "Editor shell".
 - **Work:**
   - `src/export/*`, `embedFonts.ts`, `filename.ts`.
   - Shell: header with the island and layer switchers, MapStage with thumbnails, ExportBar (SVG, SVG for web, Copy SVG, PNG, JPG, Download JSON), StatusLine, prefs.
