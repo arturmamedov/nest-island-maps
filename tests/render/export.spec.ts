@@ -1,12 +1,11 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 // JSON-free modules only: Playwright's ESM loader refuses schema.ts's JSON imports.
 import { dataFileName, mapFileName } from '../../src/shared/filename.js';
-import { ISLAND_IDS, LAYER_LABELS, LAYERS } from '../../src/shared/ids.js';
+import { ISLAND_IDS, LAYERS } from '../../src/shared/ids.js';
 import { ARTBOARD, ATTRIBUTION, EXPORT_SCALE, LABEL_FONTS } from '../../src/shared/tokens.js';
+import { download, seedText, selectMap, type IslandId, type Layer } from './helpers.js';
 
 /* The exports as staff get them: buttons clicked in the built editor, files
    captured from the download. The fidelity check (plan decision 11, spec §6
@@ -14,25 +13,8 @@ import { ARTBOARD, ATTRIBUTION, EXPORT_SCALE, LABEL_FONTS } from '../../src/shar
    fonts, to Chromium's own screenshot of the same map at DPR 2. Both buffers
    are live, so nothing is committed. */
 
-const ROOT = join(import.meta.dirname, '..', '..');
 const SIZE = ARTBOARD * EXPORT_SCALE;
 const MAX_DIFF_RATIO = 0.005;
-
-type IslandId = (typeof ISLAND_IDS)[number];
-type Layer = (typeof LAYERS)[number];
-
-const islandName = (id: IslandId): string => JSON.parse(readFileSync(join(ROOT, 'data/geometry', `${id}.geo.json`), 'utf8')).name;
-
-async function selectMap(page: Page, island: IslandId, layer: Layer) {
-  await page.getByRole('tablist', { name: 'Island' }).getByRole('tab', { name: islandName(island), exact: true }).click();
-  await page.getByRole('tablist', { name: 'Map' }).getByRole('tab', { name: new RegExp(`^${LAYER_LABELS[layer]} · `) }).click();
-}
-
-/** Clicks an export button and returns the downloaded file. */
-async function download(page: Page, button: string) {
-  const [file] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: button, exact: true }).click()]);
-  return { name: file.suggestedFilename(), bytes: readFileSync(await file.path()) };
-}
 
 /** Chromium's own rendering of the map: the bare render page at DPR 2, transparent. */
 async function screenshotAt2x(browser: Browser, baseURL: string, island: IslandId, layer: Layer) {
@@ -191,7 +173,7 @@ test('Download JSON is the seed file, byte for byte, for every island', async ({
     await selectMap(page, island, 'hostels');
     const file = await download(page, 'Download JSON');
     expect(file.name).toBe(dataFileName(island));
-    expect(file.bytes.toString('utf8')).toBe(readFileSync(join(ROOT, 'data/seed', `${island}.json`), 'utf8'));
-    expect(file.bytes.equals(readFileSync(join(ROOT, 'data/seed', `${island}.json`)))).toBe(true);
+    expect(file.bytes.toString('utf8')).toBe(seedText(island));
+    expect(file.bytes.equals(Buffer.from(seedText(island)))).toBe(true);
   }
 });
