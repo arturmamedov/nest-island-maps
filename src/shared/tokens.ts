@@ -12,7 +12,8 @@ export type PaletteId = (typeof PALETTE_IDS)[number];
 
 /* "Original" was sampled from the brand PNGs; "Brand teal" uses design-system
    tokens only. Orange #EA580C (the website's Book Now) is never map ink. */
-export const PALETTES: Record<PaletteId, { land: [string, string]; halo: [string, string]; ink: string; accent: string }> = {
+export type Palette = { land: [string, string]; halo: [string, string]; ink: string; accent: string };
+export const PALETTES: Record<PaletteId, Palette> = {
   original: { land: ['#7FCECF', '#98D6C8'], halo: ['#35434E', '#475B70'], ink: '#394755', accent: '#FEB700' },
   brandTeal: { land: ['#53CED1', '#309EAA'], halo: ['#083344', '#0D6F82'], ink: '#083344', accent: '#FFDE59' },
 };
