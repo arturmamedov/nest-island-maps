@@ -3,16 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { renderMapSvg } from '../../src/export/svg.js';
 import { IslandMap, type IslandMapProps } from '../../src/map/IslandMap.js';
 import { ISLANDS } from '../../src/shared/islands.js';
-import type { TextMeasurer } from '../../src/shared/labels.js';
 import { ISLAND_IDS, LAYERS, type IslandId, type Layer, type Settings } from '../../src/shared/schema.js';
 import { ATTRIBUTION, NEST_PASS } from '../../src/shared/tokens.js';
+import { stubMeasurer } from './stubMeasurer.js';
 
 /* The SVG is the product: file snapshots of every map (plus the settings
    variants) keep its markup reviewable in diffs, and the guards below hold
-   the house rules over every one of them. A pure stub measurer stands in for
-   canvas measureText, so the snapshots don't depend on installed fonts. */
-
-const stub: TextMeasurer = (text, { size }) => [...text].length * size * 0.55;
+   the house rules over every one of them. renderMapSvg is also the "SVG for
+   Figma" download, so these guards are that file's tests. A pure stub
+   measurer stands in for canvas measureText, so the snapshots don't depend
+   on installed fonts. */
 
 type Case = { name: string; island: IslandId; layer: Layer; settings?: Partial<Settings> };
 const CASES: Case[] = [
@@ -27,7 +27,7 @@ const CASES: Case[] = [
 
 const propsOf = (c: Case): IslandMapProps => {
   const { geometry, seed } = ISLANDS[c.island];
-  return { geometry, data: { ...seed, settings: { ...seed.settings, ...c.settings } }, layer: c.layer, measure: stub };
+  return { geometry, data: { ...seed, settings: { ...seed.settings, ...c.settings } }, layer: c.layer, measure: stubMeasurer };
 };
 
 const noop = () => {};
@@ -82,6 +82,10 @@ describe.each(CASES)('$name', (c) => {
   it('carries no editor markup', () => {
     expect(svg).not.toContain('data-hit');
     expect(svg).not.toContain('cursor');
+  });
+
+  it('embeds no fonts (Figma and Illustrator use the installed faces)', () => {
+    expect(svg).not.toContain('<style');
   });
 
   it('edit mode adds only hit rects and cursors', () => {
