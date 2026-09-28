@@ -1,0 +1,303 @@
+{
+  "island": "gran_canaria",
+  "name": "Gran Canaria",
+  "artboard": [
+    1080,
+    1080
+  ],
+  "projection": {
+    "type": "mercator",
+    "s": 57250.832798341326,
+    "lamC": -0.27220971566394114,
+    "mC": 0.5085669396650261,
+    "cx": 533,
+    "cy": 550.5,
+    "note": "x = cx + (lngRad - lamC) * s ; y = cy - (ln(tan(pi/4 + latRad/2)) - mC) * s"
+  },
+  "hostels": [
+    {
+      "slug": "la-isleta-nest",
+      "label": "La Isleta",
+      "lat": 28.144,
+      "lng": -15.429,
+      "coordsVerified": false,
+      "labelPlacement": {
+        "side": "right",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "slug": "pura-vida-nest",
+      "label": "Pura Vida",
+      "lat": 28.132,
+      "lng": -15.445,
+      "coordsVerified": false,
+      "labelPlacement": {
+        "side": "left",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "slug": "las-palmas-nest",
+      "label": "Las Palmas",
+      "lat": 28.101,
+      "lng": -15.4135,
+      "coordsVerified": false,
+      "labelPlacement": {
+        "side": "right",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    }
+  ],
+  "attractions": [
+    {
+      "id": "las-canteras",
+      "label": "Las Canteras",
+      "lat": 28.139,
+      "lng": -15.438,
+      "icon": "beach",
+      "labelPlacement": {
+        "side": "left",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "vegueta",
+      "label": "Vegueta",
+      "lat": 28.1,
+      "lng": -15.414,
+      "icon": "culture",
+      "labelPlacement": {
+        "side": "right",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "roque-nublo",
+      "label": "Roque Nublo",
+      "lat": 27.9707,
+      "lng": -15.613,
+      "icon": "hike",
+      "labelPlacement": {
+        "side": "below",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "maspalomas",
+      "label": "Maspalomas",
+      "lat": 27.74,
+      "lng": -15.58,
+      "icon": "star",
+      "labelPlacement": {
+        "side": "below",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "mogan",
+      "label": "Puerto de Mogán",
+      "lat": 27.82,
+      "lng": -15.76,
+      "icon": "boat",
+      "labelPlacement": {
+        "side": "left",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "agaete",
+      "label": "Agaete",
+      "lat": 28.093,
+      "lng": -15.705,
+      "icon": "pools",
+      "labelPlacement": {
+        "side": "left",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "galdar",
+      "label": "Gáldar",
+      "lat": 28.145,
+      "lng": -15.653,
+      "icon": "culture",
+      "labelPlacement": {
+        "side": "above",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "bandama",
+      "label": "Bandama",
+      "lat": 28.033,
+      "lng": -15.457,
+      "icon": "mountain",
+      "labelPlacement": {
+        "side": "right",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "pozo-izquierdo",
+      "label": "Pozo Izquierdo",
+      "lat": 27.819,
+      "lng": -15.424,
+      "icon": "kite",
+      "labelPlacement": {
+        "side": "right",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "guigui",
+      "label": "Güigüí",
+      "lat": 27.953,
+      "lng": -15.82,
+      "icon": "beach",
+      "labelPlacement": {
+        "side": "left",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    }
+  ],
+  "decor": [
+    {
+      "id": "nublo",
+      "icon": "mountain",
+      "lat": 27.994,
+      "lng": -15.595,
+      "size": 88,
+      "showOn": "hostels",
+      "visible": true
+    },
+    {
+      "id": "tamadaba",
+      "icon": "forest",
+      "lat": 28.045,
+      "lng": -15.672,
+      "size": 54,
+      "showOn": "hostels",
+      "visible": true
+    },
+    {
+      "id": "hiker",
+      "icon": "hike",
+      "lat": 27.855,
+      "lng": -15.575,
+      "size": 40,
+      "showOn": "hostels",
+      "visible": true
+    },
+    {
+      "id": "beach-w",
+      "icon": "umbrella",
+      "lat": 27.99,
+      "lng": -15.77,
+      "size": 40,
+      "showOn": "hostels",
+      "visible": true
+    },
+    {
+      "id": "sun-w",
+      "icon": "sun",
+      "lat": 28.015,
+      "lng": -15.74,
+      "size": 26,
+      "showOn": "hostels",
+      "visible": true
+    },
+    {
+      "id": "beach-e",
+      "icon": "umbrella",
+      "lat": 27.87,
+      "lng": -15.4,
+      "size": 40,
+      "showOn": "hostels",
+      "visible": true
+    },
+    {
+      "id": "sun",
+      "icon": "sun",
+      "lat": 28.2,
+      "lng": -15.84,
+      "size": 44,
+      "showOn": "both",
+      "visible": true
+    },
+    {
+      "id": "bird",
+      "icon": "wildlife",
+      "lat": 28.235,
+      "lng": -15.78,
+      "size": 28,
+      "showOn": "both",
+      "visible": true
+    },
+    {
+      "id": "fish",
+      "icon": "fish",
+      "lat": 28.23,
+      "lng": -15.54,
+      "size": 34,
+      "showOn": "both",
+      "visible": true
+    },
+    {
+      "id": "boat",
+      "icon": "boat",
+      "lat": 27.76,
+      "lng": -15.8,
+      "size": 44,
+      "showOn": "both",
+      "visible": true
+    },
+    {
+      "id": "waves",
+      "icon": "pools",
+      "lat": 27.95,
+      "lng": -15.33,
+      "size": 40,
+      "showOn": "both",
+      "visible": true
+    }
+  ],
+  "routes": [],
+  "settings": {
+    "palette": "original",
+    "labelFont": "robotoCondensed",
+    "labelSize": 25,
+    "labelTracking": 0.19,
+    "labelStyle": "accent",
+    "pinStyle": "pin",
+    "pinSize": 0.9,
+    "rings": 4,
+    "showIcons": true
+  }
+}

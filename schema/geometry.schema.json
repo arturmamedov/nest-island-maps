@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "island": {
+      "type": "string",
+      "pattern": "^M[-\\d.\\sMLZ]+Z$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artboard": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number",
+          "const": 1080
+        },
+        {
+          "type": "number",
+          "const": 1080
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "source": {
+      "type": "string"
+    },
+    "projection": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "mercator"
+        },
+        "s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "lamC": {
+          "type": "number"
+        },
+        "mC": {
+          "type": "number"
+        },
+        "cx": {
+          "type": "number"
+        },
+        "cy": {
+          "type": "number"
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "s",
+        "lamC",
+        "mC",
+        "cx",
+        "cy"
+      ]
+    },
+    "rings": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "const": "ring-1"
+            },
+            "offsetPx": {
+              "type": "number"
+            },
+            "d": {
+              "type": "string",
+              "pattern": "^M[-\\d.\\sMLZ]+Z$"
+            }
+          },
+          "required": [
+            "id",
+            "offsetPx",
+            "d"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "const": "ring-2"
+            },
+            "offsetPx": {
+              "type": "number"
+            },
+            "d": {
+              "type": "string",
+              "pattern": "^M[-\\d.\\sMLZ]+Z$"
+            }
+          },
+          "required": [
+            "id",
+            "offsetPx",
+            "d"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "const": "ring-3"
+            },
+            "offsetPx": {
+              "type": "number"
+            },
+            "d": {
+              "type": "string",
+              "pattern": "^M[-\\d.\\sMLZ]+Z$"
+            }
+          },
+          "required": [
+            "id",
+            "offsetPx",
+            "d"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "const": "ring-4"
+            },
+            "offsetPx": {
+              "type": "number"
+            },
+            "d": {
+              "type": "string",
+              "pattern": "^M[-\\d.\\sMLZ]+Z$"
+            }
+          },
+          "required": [
+            "id",
+            "offsetPx",
+            "d"
+          ]
+        }
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    }
+  },
+  "required": [
+    "island",
+    "name",
+    "artboard",
+    "source",
+    "projection",
+    "rings"
+  ],
+  "title": "Nest island geometry",
+  "description": "data/geometry/<island>.geo.json: coastline, halo rings and projection, in artboard pixels."
+}

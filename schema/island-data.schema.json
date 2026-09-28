@@ -1,0 +1,469 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "island": {
+      "type": "string",
+      "enum": [
+        "tenerife",
+        "gran_canaria",
+        "ibiza"
+      ]
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artboard": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number",
+          "const": 1080
+        },
+        {
+          "type": "number",
+          "const": 1080
+        }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "projection": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "mercator"
+        },
+        "s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "lamC": {
+          "type": "number"
+        },
+        "mC": {
+          "type": "number"
+        },
+        "cx": {
+          "type": "number"
+        },
+        "cy": {
+          "type": "number"
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "s",
+        "lamC",
+        "mC",
+        "cx",
+        "cy"
+      ]
+    },
+    "hostels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "enum": [
+              "adeje-nest",
+              "duque-nest",
+              "medano-nest",
+              "ashavana-nest",
+              "los-amigos-nest",
+              "las-eras-nest",
+              "aguere-nest",
+              "arena-nest",
+              "puerto-nest",
+              "las-palmas-nest",
+              "la-isleta-nest",
+              "pura-vida-nest",
+              "cisne-nest",
+              "flamingo-nest"
+            ]
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "pattern": "^[ -~ -´¶-ňŊ-ƚƜ-ǯǱ-ȾɁ-ɏ‐-‧€]*$"
+          },
+          "lat": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "lng": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "coordsVerified": {
+            "type": "boolean"
+          },
+          "labelPlacement": {
+            "type": "object",
+            "properties": {
+              "side": {
+                "type": "string",
+                "enum": [
+                  "below",
+                  "above",
+                  "right",
+                  "left"
+                ]
+              },
+              "dx": {
+                "type": "number"
+              },
+              "dy": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "side",
+              "dx",
+              "dy"
+            ]
+          },
+          "visible": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "slug",
+          "label",
+          "lat",
+          "lng",
+          "coordsVerified",
+          "labelPlacement",
+          "visible"
+        ]
+      }
+    },
+    "attractions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "pattern": "^[ -~ -´¶-ňŊ-ƚƜ-ǯǱ-ȾɁ-ɏ‐-‧€]*$"
+          },
+          "lat": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "lng": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "icon": {
+            "type": "string",
+            "enum": [
+              "mountain",
+              "hike",
+              "boat",
+              "forest",
+              "beach",
+              "wildlife",
+              "pools",
+              "waterpark",
+              "culture",
+              "kite",
+              "viewpoint",
+              "star",
+              "peak",
+              "pine",
+              "sun",
+              "sunset",
+              "cloud",
+              "umbrella",
+              "tent",
+              "fish"
+            ]
+          },
+          "labelPlacement": {
+            "type": "object",
+            "properties": {
+              "side": {
+                "type": "string",
+                "enum": [
+                  "below",
+                  "above",
+                  "right",
+                  "left"
+                ]
+              },
+              "dx": {
+                "type": "number"
+              },
+              "dy": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "side",
+              "dx",
+              "dy"
+            ]
+          },
+          "visible": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "lat",
+          "lng",
+          "icon",
+          "labelPlacement",
+          "visible"
+        ]
+      }
+    },
+    "decor": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "icon": {
+            "type": "string",
+            "enum": [
+              "mountain",
+              "hike",
+              "boat",
+              "forest",
+              "beach",
+              "wildlife",
+              "pools",
+              "waterpark",
+              "culture",
+              "kite",
+              "viewpoint",
+              "star",
+              "peak",
+              "pine",
+              "sun",
+              "sunset",
+              "cloud",
+              "umbrella",
+              "tent",
+              "fish"
+            ]
+          },
+          "lat": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "lng": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "size": {
+            "type": "number",
+            "minimum": 20,
+            "maximum": 140
+          },
+          "showOn": {
+            "type": "string",
+            "enum": [
+              "both",
+              "hostels",
+              "attractions"
+            ]
+          },
+          "visible": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "icon",
+          "lat",
+          "lng",
+          "size",
+          "showOn",
+          "visible"
+        ]
+      }
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "from": {
+            "type": "string",
+            "enum": [
+              "adeje-nest",
+              "duque-nest",
+              "medano-nest",
+              "ashavana-nest",
+              "los-amigos-nest",
+              "las-eras-nest",
+              "aguere-nest",
+              "arena-nest",
+              "puerto-nest",
+              "las-palmas-nest",
+              "la-isleta-nest",
+              "pura-vida-nest",
+              "cisne-nest",
+              "flamingo-nest"
+            ]
+          },
+          "to": {
+            "type": "string",
+            "enum": [
+              "adeje-nest",
+              "duque-nest",
+              "medano-nest",
+              "ashavana-nest",
+              "los-amigos-nest",
+              "las-eras-nest",
+              "aguere-nest",
+              "arena-nest",
+              "puerto-nest",
+              "las-palmas-nest",
+              "la-isleta-nest",
+              "pura-vida-nest",
+              "cisne-nest",
+              "flamingo-nest"
+            ]
+          },
+          "bend": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "showOn": {
+            "type": "string",
+            "enum": [
+              "both",
+              "hostels",
+              "attractions"
+            ]
+          },
+          "visible": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "from",
+          "to",
+          "bend",
+          "showOn",
+          "visible"
+        ]
+      }
+    },
+    "settings": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "palette": {
+          "default": "original",
+          "type": "string",
+          "enum": [
+            "original",
+            "brandTeal"
+          ]
+        },
+        "labelFont": {
+          "default": "robotoCondensed",
+          "type": "string",
+          "enum": [
+            "robotoCondensed",
+            "poppins",
+            "montserrat",
+            "archivoBlack"
+          ]
+        },
+        "labelSize": {
+          "default": 25,
+          "type": "number",
+          "minimum": 14,
+          "maximum": 36
+        },
+        "labelTracking": {
+          "default": 0.19,
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.3
+        },
+        "labelStyle": {
+          "default": "accent",
+          "type": "string",
+          "enum": [
+            "accent",
+            "white",
+            "dark",
+            "text"
+          ]
+        },
+        "pinStyle": {
+          "default": "pin",
+          "type": "string",
+          "enum": [
+            "pin",
+            "dot"
+          ]
+        },
+        "pinSize": {
+          "default": 0.9,
+          "type": "number",
+          "minimum": 0.6,
+          "maximum": 1.4
+        },
+        "rings": {
+          "default": 4,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "showIcons": {
+          "default": true,
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "required": [
+    "island",
+    "name",
+    "hostels",
+    "attractions",
+    "decor",
+    "routes"
+  ],
+  "title": "Nest island map data",
+  "description": "One island: hostels, things to do, decor, dotted routes and the settings both maps are drawn with. data/seed/<island>.json and the app's \"Download data (JSON)\" share this shape."
+}

@@ -1,0 +1,87 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { fitProjection, parsePolygons, pointInPolygons, project, unproject } from '../../src/shared/geo.js';
+import { ISLAND_IDS, type IslandId } from '../../src/shared/schema.js';
+import { ISLANDS } from '../../src/shared/islands.js';
+
+const ROOT = join(import.meta.dirname, '..', '..');
+const raw = JSON.parse(
+  readFileSync(join(ROOT, 'design_handoff_island_maps/tools/raw-osm-coastlines.json'), 'utf8'),
+) as Record<IslandId, [number, number][]>;
+
+/* The boxes the handoff fitted each island into (README §5). */
+const BOXES: Record<IslandId, [number, number, number, number]> = {
+  tenerife: [200, 253, 843, 825],
+  gran_canaria: [295, 289, 771, 812],
+  ibiza: [230, 240, 850, 840],
+};
+
+describe('projection', () => {
+  for (const id of ISLAND_IDS) {
+    const p = ISLANDS[id].geometry.projection;
+
+    it(`${id}: the fit reproduces the committed constants exactly`, () => {
+      const fitted = fitProjection(raw[id], BOXES[id]);
+      expect(fitted).toEqual({ s: p.s, lamC: p.lamC, mC: p.mC, cx: p.cx, cy: p.cy });
+    });
+
+    it(`${id}: unproject inverts project`, () => {
+      for (const h of ISLANDS[id].seed.hostels) {
+        const { x, y } = project(p, h.lat, h.lng);
+        const back = unproject(p, x, y);
+        expect(Math.abs(back.lat - h.lat)).toBeLessThan(1e-9);
+        expect(Math.abs(back.lng - h.lng)).toBeLessThan(1e-9);
+      }
+    });
+
+    it(`${id}: the coastline lands inside its box`, () => {
+      const [x0, y0, x1, y1] = BOXES[id];
+      for (const [lng, lat] of raw[id]) {
+        const { x, y } = project(p, lat, lng);
+        expect(x).toBeGreaterThanOrEqual(x0 - 1e-6);
+        expect(x).toBeLessThanOrEqual(x1 + 1e-6);
+        expect(y).toBeGreaterThanOrEqual(y0 - 1e-6);
+        expect(y).toBeLessThanOrEqual(y1 + 1e-6);
+      }
+    });
+  }
+});
+
+describe('polygons', () => {
+  it('parses M/L/Z paths into closed rings', () => {
+    expect(parsePolygons('M0 0L10 0L10 10L0 10Z')).toEqual([
+      [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 10 },
+        { x: 0, y: 10 },
+      ],
+    ]);
+    expect(parsePolygons('M1.5 -2L3 4ZM5 5L6 6L5 6Z')).toHaveLength(2);
+  });
+
+  it('refuses curves: the geometry files only hold straight segments', () => {
+    expect(() => parsePolygons('M0 0Q5 5 10 0Z')).toThrow();
+  });
+
+  it('tests points inside and outside', () => {
+    const square = parsePolygons('M0 0L10 0L10 10L0 10Z');
+    expect(pointInPolygons(square, 5, 5)).toBe(true);
+    expect(pointInPolygons(square, 15, 5)).toBe(false);
+    expect(pointInPolygons(square, -1, -1)).toBe(false);
+  });
+
+  it('knows which Tenerife hostels sit on the island', () => {
+    const { geometry, seed } = ISLANDS.tenerife;
+    const land = parsePolygons(geometry.island);
+    const on = (slug: string) => {
+      const h = seed.hostels.find((x) => x.slug === slug)!;
+      const { x, y } = project(geometry.projection, h.lat, h.lng);
+      return pointInPolygons(land, x, y);
+    };
+    expect(on('adeje-nest')).toBe(true);
+    // Approximate coordinates that project just offshore until the owner verifies them.
+    expect(on('puerto-nest')).toBe(false);
+  });
+});
