@@ -1,0 +1,8 @@
+/* The faces the map itself draws with: the four label fonts at the weights
+   tokens.ts names, and Montserrat 400 for the attribution. Self-hosted, never
+   Google Fonts: exports must not depend on network timing. */
+@import '@fontsource/roboto-condensed/700.css';
+@import '@fontsource/poppins/600.css';
+@import '@fontsource/montserrat/700.css';
+@import '@fontsource/montserrat/400.css';
+@import '@fontsource/archivo-black/400.css';
