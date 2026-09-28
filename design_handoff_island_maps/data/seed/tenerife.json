@@ -1,0 +1,348 @@
+{
+  "island": "tenerife",
+  "name": "Tenerife",
+  "hostels": [
+    {
+      "slug": "aguere-nest",
+      "label": "Aguere",
+      "lat": 28.488,
+      "lng": -16.315,
+      "coordsVerified": false,
+      "labelPlacement": {
+        "side": "below",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "slug": "puerto-nest",
+      "label": "Puerto",
+      "lat": 28.414,
+      "lng": -16.564,
+      "coordsVerified": false,
+      "labelPlacement": {
+        "side": "below",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "slug": "las-eras-nest",
+      "label": "Las Eras",
+      "lat": 28.199,
+      "lng": -16.413,
+      "coordsVerified": false,
+      "labelPlacement": {
+        "side": "right",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "slug": "arena-nest",
+      "label": "Arena",
+      "lat": 28.229,
+      "lng": -16.84,
+      "coordsVerified": false,
+      "labelPlacement": {
+        "side": "below",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "slug": "adeje-nest",
+      "label": "Adeje",
+      "lat": 28.1225,
+      "lng": -16.7265,
+      "coordsVerified": false,
+      "labelPlacement": {
+        "side": "right",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "slug": "duque-nest",
+      "label": "El Duque",
+      "lat": 28.0925,
+      "lng": -16.739,
+      "coordsVerified": false,
+      "labelPlacement": {
+        "side": "left",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "slug": "ashavana-nest",
+      "label": "Ashavana",
+      "lat": 28.047,
+      "lng": -16.5355,
+      "coordsVerified": false,
+      "labelPlacement": {
+        "side": "right",
+        "dx": 16,
+        "dy": -46
+      },
+      "visible": true
+    },
+    {
+      "slug": "medano-nest",
+      "label": "Médano",
+      "lat": 28.0455,
+      "lng": -16.5385,
+      "coordsVerified": false,
+      "labelPlacement": {
+        "side": "right",
+        "dx": 16,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "slug": "los-amigos-nest",
+      "label": "Los Amigos",
+      "lat": 28.0505,
+      "lng": -16.53,
+      "coordsVerified": false,
+      "labelPlacement": {
+        "side": "right",
+        "dx": 16,
+        "dy": 46
+      },
+      "visible": true
+    }
+  ],
+  "attractions": [
+    {
+      "id": "teide",
+      "label": "Teide",
+      "lat": 28.2724,
+      "lng": -16.6425,
+      "icon": "mountain",
+      "labelPlacement": {
+        "side": "above",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "masca",
+      "label": "Masca",
+      "lat": 28.306,
+      "lng": -16.841,
+      "icon": "hike",
+      "labelPlacement": {
+        "side": "left",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "los-gigantes",
+      "label": "Los Gigantes",
+      "lat": 28.247,
+      "lng": -16.838,
+      "icon": "boat",
+      "labelPlacement": {
+        "side": "below",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "garachico",
+      "label": "Garachico",
+      "lat": 28.3736,
+      "lng": -16.764,
+      "icon": "pools",
+      "labelPlacement": {
+        "side": "left",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "loro-parque",
+      "label": "Loro Parque",
+      "lat": 28.4077,
+      "lng": -16.5646,
+      "icon": "wildlife",
+      "labelPlacement": {
+        "side": "above",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "la-laguna",
+      "label": "La Laguna",
+      "lat": 28.4874,
+      "lng": -16.3159,
+      "icon": "culture",
+      "labelPlacement": {
+        "side": "right",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "anaga",
+      "label": "Anaga",
+      "lat": 28.56,
+      "lng": -16.25,
+      "icon": "forest",
+      "labelPlacement": {
+        "side": "above",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "teresitas",
+      "label": "Teresitas",
+      "lat": 28.51,
+      "lng": -16.189,
+      "icon": "beach",
+      "labelPlacement": {
+        "side": "right",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "siam-park",
+      "label": "Siam Park",
+      "lat": 28.072,
+      "lng": -16.7265,
+      "icon": "waterpark",
+      "labelPlacement": {
+        "side": "left",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "el-medano",
+      "label": "El Médano",
+      "lat": 28.048,
+      "lng": -16.529,
+      "icon": "kite",
+      "labelPlacement": {
+        "side": "right",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    }
+  ],
+  "decor": [
+    {
+      "id": "teide",
+      "icon": "mountain",
+      "lat": 28.2834,
+      "lng": -16.6425,
+      "size": 88,
+      "showOn": "hostels",
+      "visible": true
+    },
+    {
+      "id": "hiker",
+      "icon": "hike",
+      "lat": 28.3136,
+      "lng": -16.735,
+      "size": 40,
+      "showOn": "hostels",
+      "visible": true
+    },
+    {
+      "id": "pine",
+      "icon": "pine",
+      "lat": 28.33,
+      "lng": -16.56,
+      "size": 38,
+      "showOn": "hostels",
+      "visible": true
+    },
+    {
+      "id": "anaga-forest",
+      "icon": "forest",
+      "lat": 28.55,
+      "lng": -16.22,
+      "size": 44,
+      "showOn": "hostels",
+      "visible": true
+    },
+    {
+      "id": "sun",
+      "icon": "sun",
+      "lat": 28.56,
+      "lng": -16.86,
+      "size": 44,
+      "showOn": "both",
+      "visible": true
+    },
+    {
+      "id": "bird",
+      "icon": "wildlife",
+      "lat": 28.59,
+      "lng": -16.77,
+      "size": 30,
+      "showOn": "both",
+      "visible": true
+    },
+    {
+      "id": "fish",
+      "icon": "fish",
+      "lat": 28.63,
+      "lng": -16.55,
+      "size": 36,
+      "showOn": "both",
+      "visible": true
+    },
+    {
+      "id": "waves",
+      "icon": "pools",
+      "lat": 28.35,
+      "lng": -16.25,
+      "size": 40,
+      "showOn": "both",
+      "visible": true
+    },
+    {
+      "id": "boat",
+      "icon": "boat",
+      "lat": 27.99,
+      "lng": -16.8,
+      "size": 44,
+      "showOn": "both",
+      "visible": true
+    }
+  ],
+  "routes": [
+    {
+      "id": "puerto-arena",
+      "from": "puerto-nest",
+      "to": "arena-nest",
+      "bend": 0.25,
+      "showOn": "hostels",
+      "visible": true
+    }
+  ]
+}

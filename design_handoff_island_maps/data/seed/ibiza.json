@@ -1,0 +1,231 @@
+{
+  "island": "ibiza",
+  "name": "Ibiza",
+  "hostels": [
+    {
+      "slug": "flamingo-nest",
+      "label": "Flamingo",
+      "lat": 38.9985,
+      "lng": 1.579,
+      "coordsVerified": false,
+      "labelPlacement": {
+        "side": "left",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "slug": "cisne-nest",
+      "label": "Cisne",
+      "lat": 38.9805,
+      "lng": 1.3035,
+      "coordsVerified": false,
+      "labelPlacement": {
+        "side": "right",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    }
+  ],
+  "attractions": [
+    {
+      "id": "dalt-vila",
+      "label": "Dalt Vila",
+      "lat": 38.907,
+      "lng": 1.436,
+      "icon": "culture",
+      "labelPlacement": {
+        "side": "right",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "es-vedra",
+      "label": "Es Vedrà",
+      "lat": 38.876,
+      "lng": 1.228,
+      "icon": "viewpoint",
+      "labelPlacement": {
+        "side": "below",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "cala-comte",
+      "label": "Cala Comte",
+      "lat": 38.963,
+      "lng": 1.225,
+      "icon": "beach",
+      "labelPlacement": {
+        "side": "left",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "ses-salines",
+      "label": "Ses Salines",
+      "lat": 38.84,
+      "lng": 1.396,
+      "icon": "beach",
+      "labelPlacement": {
+        "side": "below",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "cala-salada",
+      "label": "Cala Salada",
+      "lat": 39.011,
+      "lng": 1.2975,
+      "icon": "pools",
+      "labelPlacement": {
+        "side": "left",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "benirras",
+      "label": "Benirràs",
+      "lat": 39.09,
+      "lng": 1.454,
+      "icon": "star",
+      "labelPlacement": {
+        "side": "above",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "hippy-market",
+      "label": "Hippy Market",
+      "lat": 38.996,
+      "lng": 1.582,
+      "icon": "culture",
+      "labelPlacement": {
+        "side": "right",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    },
+    {
+      "id": "cala-xarraca",
+      "label": "Cala Xarraca",
+      "lat": 39.104,
+      "lng": 1.5,
+      "icon": "beach",
+      "labelPlacement": {
+        "side": "right",
+        "dx": 0,
+        "dy": 0
+      },
+      "visible": true
+    }
+  ],
+  "decor": [
+    {
+      "id": "forest",
+      "icon": "forest",
+      "lat": 39.015,
+      "lng": 1.425,
+      "size": 64,
+      "showOn": "hostels",
+      "visible": true
+    },
+    {
+      "id": "palm",
+      "icon": "beach",
+      "lat": 38.905,
+      "lng": 1.3,
+      "size": 52,
+      "showOn": "hostels",
+      "visible": true
+    },
+    {
+      "id": "pine",
+      "icon": "pine",
+      "lat": 39.05,
+      "lng": 1.5,
+      "size": 40,
+      "showOn": "hostels",
+      "visible": true
+    },
+    {
+      "id": "beach",
+      "icon": "umbrella",
+      "lat": 38.86,
+      "lng": 1.4,
+      "size": 40,
+      "showOn": "hostels",
+      "visible": true
+    },
+    {
+      "id": "boat",
+      "icon": "boat",
+      "lat": 38.93,
+      "lng": 1.18,
+      "size": 44,
+      "showOn": "both",
+      "visible": true
+    },
+    {
+      "id": "fish",
+      "icon": "fish",
+      "lat": 39.17,
+      "lng": 1.35,
+      "size": 36,
+      "showOn": "both",
+      "visible": true
+    },
+    {
+      "id": "sun",
+      "icon": "sun",
+      "lat": 39.14,
+      "lng": 1.66,
+      "size": 44,
+      "showOn": "both",
+      "visible": true
+    },
+    {
+      "id": "waves",
+      "icon": "pools",
+      "lat": 38.86,
+      "lng": 1.55,
+      "size": 40,
+      "showOn": "both",
+      "visible": true
+    },
+    {
+      "id": "bird",
+      "icon": "wildlife",
+      "lat": 39.12,
+      "lng": 1.24,
+      "size": 30,
+      "showOn": "both",
+      "visible": true
+    }
+  ],
+  "routes": [
+    {
+      "id": "cisne-flamingo",
+      "from": "cisne-nest",
+      "to": "flamingo-nest",
+      "bend": 0.18,
+      "showOn": "hostels",
+      "visible": true
+    }
+  ]
+}
