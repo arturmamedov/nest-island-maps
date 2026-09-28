@@ -1,36 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { loadPreviewBackground, PREVIEW_BACKGROUNDS, savePreviewBackground } from '../../src/editor/prefs.js';
+import { mapStorage, throwing } from './storage.js';
 
 /* The preview background is a per-viewer preference in localStorage. Storage
    can be absent, hold junk, or throw (private windows, blocked site data);
    none of that may break the editor, which then shows White. */
-
-function mapStorage(): Storage {
-  const m = new Map<string, string>();
-  return {
-    get length() {
-      return m.size;
-    },
-    clear: () => m.clear(),
-    getItem: (k) => m.get(k) ?? null,
-    key: (i) => [...m.keys()][i] ?? null,
-    removeItem: (k) => void m.delete(k),
-    setItem: (k, v) => void m.set(k, String(v)),
-  };
-}
-
-const throwing: Storage = {
-  length: 0,
-  clear() {},
-  key: () => null,
-  getItem() {
-    throw new Error('SecurityError');
-  },
-  removeItem() {},
-  setItem() {
-    throw new Error('QuotaExceededError');
-  },
-};
 
 describe('preview background preference', () => {
   it('offers White and the spec Focus surface', () => {

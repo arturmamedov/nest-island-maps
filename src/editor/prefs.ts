@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { WHITE } from '../shared/tokens';
+import { browserStorage, STORAGE_KEYS } from './browserStorage';
 
 /* The preview background (spec §2 settings: "preview only, never exported")
    is a viewer preference, not map data: it lives in this browser's
@@ -15,7 +16,7 @@ export type PreviewBackground = keyof typeof PREVIEW_BACKGROUNDS;
 
 export const PREVIEW_BACKGROUND_LABELS: Record<PreviewBackground, string> = { white: 'White', focus: 'Focus surface' };
 
-const KEY = 'nest-island-maps.previewBackground';
+const KEY = STORAGE_KEYS.previewBackground;
 
 const isPreviewBackground = (v: string | null | undefined): v is PreviewBackground => !!v && Object.hasOwn(PREVIEW_BACKGROUNDS, v);
 
@@ -35,15 +36,6 @@ export function savePreviewBackground(storage: Storage | undefined, value: Previ
     storage?.setItem(KEY, value);
   } catch {
     // Not remembered across reloads, which is harmless.
-  }
-}
-
-// Even reading window.localStorage can throw when site data is blocked.
-function browserStorage(): Storage | undefined {
-  try {
-    return window.localStorage;
-  } catch {
-    return undefined;
   }
 }
 
