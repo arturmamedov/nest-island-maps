@@ -1,25 +1,25 @@
-import { LAYER_LABELS } from '../shared/ids';
+import { TAB_LABELS, TABS } from '../shared/ids';
 import { ISLAND_LIST } from '../shared/islands';
-import { LAYERS, type IslandData, type IslandId, type Layer } from '../shared/schema';
-import { PREVIEW_BACKGROUND_LABELS, type PreviewBackground } from './prefs';
+import type { IslandData, IslandId } from '../shared/schema';
 
-/* The island and map switchers (spec §2), plus the preview background until
-   M4's settings panel takes it. The Decor tab arrives with its rows in M4.
-   Map tabs show how many points are visible, as the prototype did. */
+/* The island switcher and the list tabs (spec §2): Hostels and Things to do
+   are the two maps, Decor holds the icons and routes both maps share. Each
+   tab shows how many of its items are visible, as the prototype did. */
+
+export type Tab = (typeof TABS)[number];
 
 type HeaderProps = {
   island: IslandId;
-  layer: Layer;
+  tab: Tab;
   data: IslandData;
-  background: PreviewBackground;
   onIsland: (island: IslandId) => void;
-  onLayer: (layer: Layer) => void;
-  onBackground: (background: PreviewBackground) => void;
+  onTab: (tab: Tab) => void;
 };
 
-const visibleCount = (data: IslandData, layer: Layer) => (layer === 'hostels' ? data.hostels : data.attractions).filter((i) => i.visible).length;
+// Each tab is named after the list it shows.
+const visibleCount = (data: IslandData, tab: Tab) => (data[tab] as readonly { visible: boolean }[]).filter((i) => i.visible).length;
 
-export function Header({ island, layer, data, background, onIsland, onLayer, onBackground }: HeaderProps) {
+export function Header({ island, tab, data, onIsland, onTab }: HeaderProps) {
   return (
     <header className="header">
       <h1 className="title">Nest Island Maps</h1>
@@ -33,18 +33,9 @@ export function Header({ island, layer, data, background, onIsland, onLayer, onB
       </div>
 
       <div className="tabs" role="tablist" aria-label="Map">
-        {LAYERS.map((l) => (
-          <button key={l} type="button" role="tab" aria-selected={l === layer} onClick={() => onLayer(l)}>
-            {LAYER_LABELS[l]} · {visibleCount(data, l)}
-          </button>
-        ))}
-      </div>
-
-      <div className="preview-toggle" role="group" aria-label="Preview background">
-        <span className="muted">Preview</span>
-        {(Object.keys(PREVIEW_BACKGROUND_LABELS) as PreviewBackground[]).map((b) => (
-          <button key={b} type="button" className="chip" aria-pressed={b === background} onClick={() => onBackground(b)}>
-            {PREVIEW_BACKGROUND_LABELS[b]}
+        {TABS.map((t) => (
+          <button key={t} type="button" role="tab" aria-selected={t === tab} onClick={() => onTab(t)}>
+            {TAB_LABELS[t]} · {visibleCount(data, t)}
           </button>
         ))}
       </div>

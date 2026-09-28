@@ -34,10 +34,13 @@ body {
 }
 
 button {
+  /* Design-system rule: every control grows slightly on hover (1.03–1.1). A
+     control sets how much here; the one hover rule below reads it, so the
+     reduced-motion block can switch every one of them off. */
+  --hover-scale: 1.04;
   font: inherit;
   color: inherit;
   cursor: pointer;
-  /* Design-system rule: every control grows slightly on hover. */
   transition:
     transform var(--ease),
     background-color var(--ease),
@@ -45,11 +48,19 @@ button {
 }
 
 button:hover:not(:disabled) {
-  transform: scale(1.04);
+  transform: scale(var(--hover-scale));
 }
 
+/* Disabled only while busy (an export running). */
 button:disabled {
   cursor: progress;
+  opacity: 0.6;
+}
+
+/* Nothing to do here, but still focusable, so focus never drops when a control runs out of work. */
+button[aria-disabled='true'] {
+  --hover-scale: 1;
+  cursor: default;
   opacity: 0.6;
 }
 
@@ -65,10 +76,6 @@ button:focus-visible {
   button:hover:not(:disabled) {
     transform: none;
   }
-}
-
-.muted {
-  color: var(--muted);
 }
 
 /* Header */
@@ -105,7 +112,8 @@ button:focus-visible {
   font-size: 13px;
 }
 
-.segmented button[aria-selected='true'] {
+.segmented button[aria-selected='true'],
+.segmented button[aria-pressed='true'] {
   background: #fff;
   color: var(--deep);
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.1);
@@ -129,14 +137,6 @@ button:focus-visible {
 .tabs button[aria-selected='true'] {
   background: var(--primary);
   color: #fff;
-}
-
-.preview-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
-  font-size: 12.5px;
 }
 
 .chip {
@@ -219,21 +219,113 @@ button:focus-visible {
   color: var(--muted);
 }
 
-/* Side panel */
+/* Draft notices: persistent, under the header, until someone chooses. */
+
+.notice {
+  display: grid;
+  gap: 8px;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--accent);
+  background: #ecfeff;
+  color: var(--deep);
+  font-size: 12.5px;
+}
+
+.notice-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin: 0;
+}
+
+.notice-line > span {
+  flex: 1 1 320px;
+}
+
+.notice-line .btn {
+  padding: 6px 12px;
+}
+
+.notice-problem {
+  color: #7f1d1d;
+}
+
+/* Focus lands on a line after an answer (DraftNotice), never on its buttons. */
+.notice-line:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Side panel. On a wide screen the editor is one window-high shell: header
+   and notices on top, then the stage and the panel, each scrolling on its
+   own, with the status line always in view at the panel's foot. Narrower,
+   everything stacks and the page scrolls (see the 1100 px query). */
 
 .panel {
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   border-left: 1px solid var(--border);
 }
 
+.panel-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+@media (width > 1100px) {
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  .workspace {
+    flex: 1;
+    min-height: 0;
+  }
+  .stage {
+    overflow-y: auto;
+  }
+}
+
+.panel-intro {
+  margin-bottom: 16px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.tag {
+  display: inline-block;
+  margin-right: 6px;
+  border-radius: 999px;
+  padding: 2px 9px;
+  background: var(--quiet);
+  color: var(--primary);
+  font-weight: 600;
+}
+
 .panel-heading {
-  margin: 0 0 20px;
+  margin: 0 0 6px;
   font: 700 17px/1.2 Poppins, sans-serif;
   color: var(--deep);
 }
 
+.lede {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
 .panel-section {
-  padding-bottom: 16px;
+  padding: 16px 0;
   border-bottom: 1px solid var(--divider);
 }
 
@@ -241,6 +333,472 @@ button:focus-visible {
   margin: 0 0 12px;
   font: 700 14px/1.2 Poppins, sans-serif;
   color: var(--text);
+}
+
+.panel-title-note {
+  margin-left: 6px;
+  font: 600 12px/1.2 Montserrat, sans-serif;
+  color: var(--muted);
+}
+
+/* Data rows (the prototype's turn 2 grids). */
+
+.rows-section {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--divider);
+}
+
+/* .caption sets its own margin later in the file, hence the doubled class. */
+.caption.rows-caption {
+  margin: 0 0 8px;
+}
+
+.rows-title {
+  margin: 16px 0 8px;
+  font: 700 13px/1.2 Poppins, sans-serif;
+  color: var(--deep);
+}
+
+.rows-head,
+.row {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 22px minmax(0, 1fr) 136px 78px 22px;
+}
+
+.rows-head {
+  padding: 6px 0;
+  border-top: 1px solid var(--divider);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.row {
+  align-items: start;
+  padding: 7px 0;
+  border-top: 1px solid var(--divider);
+}
+
+/* Decor and routes: icon or ends, a slider, Show on. */
+.row-decor,
+.rows-head-decor {
+  grid-template-columns: 22px minmax(0, 1fr) 92px 86px 22px;
+  align-items: center;
+}
+
+.row-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.toggle {
+  --hover-scale: 1.1;
+  width: 18px;
+  height: 18px;
+  margin-top: 6px;
+  padding: 0;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  background: #fff;
+}
+
+.row-decor .toggle {
+  margin-top: 0;
+}
+
+.toggle[aria-pressed='true'] {
+  background: var(--accent);
+}
+
+.input,
+.select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: #fff;
+  color: var(--text);
+  font: 600 12.5px/1.2 Montserrat, sans-serif;
+  outline: none;
+}
+
+.input:focus,
+.select:focus {
+  border-color: var(--accent);
+}
+
+/* After :focus, so a bad value stays red while it is being typed. No
+   transition on the border: the colour is the message. */
+.input[aria-invalid='true'] {
+  border-color: var(--error);
+}
+
+.input-coords {
+  padding: 6px 7px;
+  font: 500 12px/1.2 ui-monospace, Menlo, monospace;
+}
+
+.sides {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2px;
+  padding: 2px;
+  border-radius: 6px;
+  background: var(--quiet);
+}
+
+.sides button {
+  --hover-scale: 1.1;
+  border: 0;
+  border-radius: 4px;
+  padding: 5px 0;
+  background: transparent;
+  color: var(--text-2);
+  font: 700 12px/1 Montserrat, sans-serif;
+}
+
+.sides button[aria-pressed='true'] {
+  background: var(--primary);
+  color: #fff;
+}
+
+.remove {
+  --hover-scale: 1.1;
+  width: 22px;
+  height: 24px;
+  margin-top: 3px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted-2);
+  font: 500 18px/1 Montserrat, sans-serif;
+}
+
+.row-decor .remove {
+  margin-top: 0;
+}
+
+.remove:hover {
+  color: var(--error);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.badge {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: var(--quiet);
+  color: var(--text-2);
+  font: 600 10.5px/1.3 Montserrat, sans-serif;
+}
+
+button.badge:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--primary);
+}
+
+.badge-sea {
+  border-color: #f3c6c5;
+  background: #fdf2f2;
+  color: var(--error);
+}
+
+.icon-button {
+  --hover-scale: 1.03;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: #fff;
+  color: var(--text-2);
+  font: 500 12px/1.3 Montserrat, sans-serif;
+  text-align: left;
+}
+
+.row-decor .icon-button {
+  padding: 5px 8px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.icon-button svg {
+  flex: none;
+  color: #394755;
+}
+
+.icon-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-caret {
+  color: var(--muted-2);
+}
+
+.picker {
+  position: relative;
+  min-width: 0;
+}
+
+/* The icon picker's and "+ Add hostel"'s panel (usePopover). */
+.picker-panel {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 4px);
+  left: 0;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.12);
+}
+
+.picker-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  width: 300px;
+}
+
+/* Below the button, where the panel can scroll to it; long lists scroll inside. */
+.picker-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 100%;
+  max-height: min(320px, 60vh);
+  overflow-y: auto;
+}
+
+.picker-menu button {
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: transparent;
+  color: var(--text);
+  font: 600 12.5px/1.2 Montserrat, sans-serif;
+  text-align: left;
+  --hover-scale: 1.03;
+}
+
+.picker-menu button:hover,
+.picker-menu button:focus-visible {
+  background: var(--quiet);
+}
+
+.add-hostel {
+  flex: 1;
+}
+
+.add-hostel > .btn {
+  width: 100%;
+}
+
+.picker-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 7px 2px;
+  background: transparent;
+  color: var(--text-2);
+  font: 500 10.5px/1.2 Montserrat, sans-serif;
+  text-align: center;
+}
+
+.picker-grid button svg {
+  color: #394755;
+}
+
+.picker-grid button[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--primary);
+}
+
+.range {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--primary);
+}
+
+.range-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.range-cell .range {
+  min-width: 0;
+}
+
+.range-value {
+  flex: none;
+  width: 24px;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.showon {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 4px;
+  background: #fff;
+  color: var(--primary);
+  font: 600 11px/1.2 Montserrat, sans-serif;
+}
+
+.route-ends {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 12px minmax(0, 1fr);
+  gap: 3px;
+  align-items: center;
+}
+
+.route-ends button {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 4px;
+  background: #fff;
+  color: var(--text);
+  font: 600 11.5px/1.2 Montserrat, sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-ends span {
+  color: var(--muted-2);
+  font-size: 12px;
+  text-align: center;
+}
+
+.rows-foot {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--divider);
+}
+
+.rows-foot .btn {
+  flex: 1;
+  padding: 8px 10px;
+}
+
+/* Settings */
+
+.caption.settings-caption {
+  margin: -6px 0 4px;
+}
+
+.settings-group-title {
+  margin: 14px 0 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.field {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 12.5px;
+}
+
+.field-label {
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.field-note {
+  min-width: 44px;
+  font-size: 11.5px;
+  color: var(--muted);
+  text-align: right;
+}
+
+/* Controls without a value note take the note's column too. */
+.field .segmented,
+.field .select {
+  grid-column: 2 / 4;
+}
+
+.field-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.field-toggle input {
+  margin: 0;
+  accent-color: var(--primary);
+}
+
+.segmented-small {
+  display: flex;
+}
+
+.segmented-small button {
+  flex: 1 1 auto;
+  padding: 6px 6px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Island data: Import JSON, Reset island and its inline confirm. */
+
+.caption.island-file-caption {
+  margin: -6px 0 12px;
+}
+
+.button-row {
+  display: flex;
+  gap: 8px;
+}
+
+.button-row .btn {
+  flex: 1;
+}
+
+.confirm p {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  color: var(--text);
+}
+
+.btn-danger {
+  border: 2px solid var(--error);
+  background: var(--error);
+  color: #fff;
 }
 
 .export-grid {
@@ -288,30 +846,43 @@ button:focus-visible {
 }
 
 .status {
-  min-height: 18px;
-  margin: 12px 0 0;
+  min-height: 39px;
+  margin: 0;
+  padding: 10px 24px;
+  border-top: 1px solid var(--divider);
+  background: #fff;
   font-weight: 600;
   font-size: 12px;
   color: var(--primary);
 }
 
-@media (max-width: 1100px) {
+@media (width <= 1100px) {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
   }
+  /* Stacked under the stage, the panel is part of the page and scrolls with it. */
   .panel {
     border-left: 0;
     border-top: 1px solid var(--border);
+  }
+  .panel-scroll {
+    overflow: visible;
+  }
+  .status {
+    position: sticky;
+    bottom: 0;
   }
   .thumbs {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 600px) {
+@media (width <= 600px) {
   .header,
   .stage,
-  .panel {
+  .panel-scroll,
+  .status,
+  .notice {
     padding-left: 16px;
     padding-right: 16px;
   }

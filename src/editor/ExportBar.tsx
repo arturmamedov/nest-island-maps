@@ -8,9 +8,14 @@ import { EXPORTS, type ExportAction, type ExportContext } from './exportActions'
 
 const RASTER = ARTBOARD * EXPORT_SCALE;
 
-type ExportBarProps = { ctx: ExportContext; onStatus: (message: string) => void };
+type ExportBarProps = {
+  ctx: ExportContext;
+  /** "Tenerife · Hostels": the map the buttons export, named because the Decor tab isn't a map. */
+  mapName: string;
+  onStatus: (message: string) => void;
+};
 
-export function ExportBar({ ctx, onStatus }: ExportBarProps) {
+export function ExportBar({ ctx, mapName, onStatus }: ExportBarProps) {
   // One export at a time: a second click mid-render would race the first download.
   const [busy, setBusy] = useState(false);
 
@@ -30,7 +35,7 @@ export function ExportBar({ ctx, onStatus }: ExportBarProps) {
   return (
     <section className="panel-section" aria-labelledby="export-title">
       <h2 id="export-title" className="panel-title">
-        Export
+        Export <span className="panel-title-note">{mapName}</span>
       </h2>
       <div className="export-grid">
         {EXPORTS.map((a) => (
