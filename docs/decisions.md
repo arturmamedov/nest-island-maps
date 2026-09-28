@@ -63,12 +63,76 @@ Where the app deliberately differs from the handoff prototype (`design_handoff_i
 ## Editor shell
 
 - **Layout:**
-  - a header with the island switcher, the map tabs (with visible counts, as in the prototype) and the preview background;
+  - a header with the island switcher and the list tabs `Hostels · n`, `Things to do · n` and `Decor · n` (visible counts, as in the prototype);
+  - the draft notices, when there are any (see "Autosave");
   - the stage, with the selected map large and the other five as thumbnails, all drawn by `IslandMap`;
-  - a side panel of about 460 px with the exports and the status line.
+  - a side panel of about 460 px, top to bottom:
+    - the prototype's intro ("Data · Edit, add, remove · saved in this browser", "Map data"), without its drag and click sentences until M5;
+    - the rows of the current tab;
+    - Settings;
+    - Export, titled with the map it exports ("Export Tenerife · Hostels"), since the Decor tab isn't a map;
+    - Island data (Import JSON, Reset island);
+    - the status line.
+  - On a wide screen the editor is one window-high shell: the stage and the panel scroll on their own, and the status line stays in view. Below 1100 px everything stacks and the page scrolls.
   - Clicking a thumbnail to select it is M5.
-- **The preview background sits in the header until M4's settings panel exists.** It is a per-browser preference in `localStorage` (`nest-island-maps.previewBackground`), never in the island data or an export. It falls back to White when storage is missing or throws.
+- **Decor is a tab, not a map.** On it, the stage keeps the last map shown, and both of the island's maps are outlined, as in the prototype, because decor belongs to both.
+- **The preview background sits in Settings, under Colours,** marked "never exported". It moved there from the header in M4. It is a per-browser preference in `localStorage` (`nest-island-maps.previewBackground`), never in the island data or an export. It falls back to White when storage is missing or throws.
+- **Settings follow the prototype's groups:** Colours, Labels, Markers, Island, with the ranges of `tokens.ts`. The font is a select; the other choices are segmented controls, built as pressed buttons in a named group (plain buttons in the tab order, like the preview chips, rather than radios without radio keys); rings is 0–4. The caption says "Both `<Island>` maps share these."
 - **The selection outline and the preview background go on the HTML wrapper,** never in the SVG, so neither can reach an export.
 - **The stage re-measures in two cases:** on `useFontsVersion()`, and once `loadMapFonts` has resolved for every island. A face can finish loading before the `loadingdone` listener is attached.
+  - The fonts are loaded again only when an island's label face or label text changes, not on every edit, so dragging a slider doesn't reload fonts.
 - **Switchers:** the island switcher is the prototype's segmented control (a white active pill). The map tabs use the spec's active tab, `#0D6F82` with white text.
-- **Hover:** controls grow by 1.04 over 300 ms, inside the spec's 1.03–1.1. There is no motion under `prefers-reduced-motion`.
+- **Hover:** controls grow over 300 ms, inside the spec's 1.03–1.1: 1.04 by default, 1.1 for the small row buttons (the dot, the side arrows, ×), 1.03 for the wide icon and menu buttons. One rule applies the scale each control sets, so there is no motion at all under `prefers-reduced-motion`.
+
+## Editing
+
+- **Every edit goes through the schema.** The edits (`src/editor/state.ts`) are pure functions from one island's data to new data or a refusal. `tryEdit` then parses the result with `IslandDataSchema` and keeps the parse output:
+  - the list can never hold a file that the seeds, the draft or an import would refuse;
+  - the data stays in the file's key order, so Download JSON is always seed-shaped.
+  A refused edit changes nothing and its reason shows in the status line.
+- **An invalid label stays in the input, red.** Empty, over 40 characters, a character the label fonts can't draw, or Nest Pass on Ibiza: the raw text stays in the row, the border turns `#D15653`, the reason shows on hover, and the map keeps the last good label. This is the coordinates pattern (decision 13). The input and the edit ask the same function, `parseLabel`, so the list accepts exactly what the file accepts. Labels are stored trimmed and NFC-normalised.
+- **Ids are set once, in the seeds' style:**
+  - a new spot is `new-spot`, then `new-spot-2`…;
+  - a new icon is named after its icon (`sun-2`);
+  - a new route after its hostels, without `-nest` (`aguere-puerto`).
+  Renaming a row or cycling a route's ends never changes its id: ids are identity and, prefixed by the layout, Figma's layer names.
+- **New points** sit at the artboard centre, unprojected (spec §2), rounded to 5 decimals: about a metre, where a pixel is well over 100 m. The defaults are the prototype's:
+  - a spot is `New spot` with the star icon, label below;
+  - an icon is `sun`, 40 px, on both maps;
+  - a route joins the first two visible hostels, bend 0.2, on the Hostels map.
+- **"+ Add hostel" offers only the island's real hostels that are not on the map** (decision 3). There is no free "+ Add row" for hostels.
+  - A hostel comes back as its seed had it, in its seed place, so removing and re-adding one without routes leaves no diff. Its removed routes don't come back.
+  - A canonical hostel with no seed entry (after a future `sync:hostels`) starts at the centre under its canonical name, unverified.
+  - Every hostel is on its map today, so the control stays disabled ("All 9 Tenerife hostels are on the map") until one is removed.
+  - It is a button that opens a short list, not a `<select>`: on Windows a focused select changes its value on the arrow keys without opening, and every change here would add a hostel.
+- **Removing a hostel removes its routes,** and the status says so ("Removed, with 1 route"). Other removals are silent, as in the prototype.
+- **Route ends cycle over the visible hostels,** in list order, stepping over the other end, so a route never joins a hostel to itself. The prototype cycled every hostel and allowed that. With no other visible hostel to move to, the click is refused with a message.
+- **Choosing the side a label already has does nothing.** A new side clears the drag nudge (spec §2); the same side keeps it, so a stray click can't undo a hand-set stack like El Médano's.
+- **The verified flag:**
+  - clicking the Unverified badge marks the hostel verified at once ("`<label>` marked verified");
+  - editing its coordinates clears the flag only if they actually change (decision 13).
+  - "In the sea" is informational: the pin projects outside the coastline polygon.
+- **Slider values are rounded before they reach the file:** label size and decor size to whole pixels; tracking, pin size and bend to 2 decimals.
+- **The icon picker is a dropdown** of all 20 icons with their previews, as the spec prefers for the real app; the prototype cycled one click at a time. It and "+ Add hostel" share one popover: it closes on a choice, a click or focus elsewhere, or Esc.
+- **Each row is a named group** (the label, the icon's name, or "From → To"), so a screen reader says which row a Visible, side or × button belongs to.
+- **Import JSON replaces the selected island,** through `parseDataFile`. Another island's file, a projection mismatch or a schema error is refused as "Import failed: `<reason>`", and a file that isn't JSON as "Import failed: that file is not JSON". Success reads "`<Island>` imported".
+- **Reset island confirms inline** (decision 12): "Reset `<Island>` to the published map? Edits to both maps are lost.", with Reset and Cancel, then "`<Island>` back to defaults". The prototype reset at once. Cancel takes the focus, and after either answer it returns to "Reset island". Settings reset too, since they belong to the island file.
+
+## Autosave
+
+- **The draft** is `nest-island-maps.draft` in `localStorage`, holding only the islands whose data differs from their published seed: `{ version: 1, islands: { <id>: { base, data } } }`. `base` is a 32-bit FNV-1a hash of the seed file's bytes (the Download JSON form).
+- **A newer seed under a draft** (decision 9): the draft is still shown, with a persistent notice under the header: "`<Island>`: the published map changed since this draft was saved."
+  - **Load published** takes the seed.
+  - **Keep draft** keeps the edits, which then count as built on the new seed.
+  - After an answer, focus goes to the notice line that takes its place, or the one before when the last line was answered, or the panel heading once none are left. It never goes to a button: the next line's first button may be another island's Load published, which a second key press would run. Only a keyboard answer scrolls the heading into view; a mouse answer never jumps the page.
+  - Saves keep the old base until one is chosen, so the notice survives edits and reloads.
+- **A draft identical to the current seed is dropped silently.** That is the publishing flow (download, commit as the seed, reload), and it must not warn.
+- **An unreadable draft is reported, not lost.** An island that fails `parseDataFile` (or a draft that isn't the right shape at all) falls back to the seed, and a persistent notice gives the reason. The unreadable entry stays in storage until that island is edited or the notice is dismissed.
+  - The notice goes at the moment an edit replaces the entry: once that island's data differs from its seed (for a whole unreadable draft, once any island's does). A reset back to the seed keeps both.
+  - Inside a readable draft, each island's entry is checked on its own, so an odd or unknown entry never voids the others. Entries for islands the app doesn't know are dropped at the next save.
+- **Saving:**
+  - debounced (400 ms), and flushed on `pagehide`, so an edit followed at once by a reload is kept;
+  - skipped when it would write what storage already holds, so opening a second tab never overwrites the first. If two tabs both edit, the last save wins.
+  - Reset, Import and Load published count as built on the current seed.
+- **Storage that fails never breaks the editor:** every access is guarded. A failed save shows "Couldn’t save in this browser — download the JSON to keep your changes" once, until a save succeeds again.
+- **Raw text and resets:** the label and coordinates text lives in row state. Rows are keyed by an island revision that goes up on reset, import and Load published, so text the data never took (an empty, red label) is cleared even when the reset leaves the data as it was.

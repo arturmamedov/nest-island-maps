@@ -1,6 +1,6 @@
 # Nest Island Maps — v1 implementation plan
 
-> **Status:** approved by the owner on 2026-09-27. M1 done on 2026-09-27 (branch `feat/v1`, commits `c10c8f2`…`3539c25`). M2 done on 2026-09-28 (commits `ec13684`…`8f8e48e`). M3 done on 2026-09-28 (commits `9f5755d`…`b8f74e2`). M4 is next.
+> **Status:** approved by the owner on 2026-09-27. M1 done on 2026-09-27 (branch `feat/v1`, commits `c10c8f2`…`3539c25`). M2 done on 2026-09-28 (commits `ec13684`…`8f8e48e`). M3 done on 2026-09-28 (commits `9f5755d`…`b8f74e2`). M4 done on 2026-09-28 (commits `402aba7`…`5e96c51`). M5 is next.
 
 ## Context
 
@@ -168,7 +168,14 @@ Export comes before editing because font-embedded rasterising is the riskiest pi
   - The PNG is 2160 with transparent corners; the JPG has white corners.
 - **Verify:** `npm test; npm run test:render`, then open an exported PNG in Chrome.
 
-### M4 – Data editing + persistence
+### M4 – Data editing + persistence (done 2026-09-28)
+- **Done as planned,** plus a few additions:
+  - every edit is held to `IslandDataSchema` (`tryEdit`), so the data can never become a file the schema refuses, and Download JSON stays seed-shaped;
+  - the draft stores only edited islands, drops one that became the published seed, and keeps an unreadable draft (with a notice) until it is replaced or dismissed;
+  - a Decor tab (`Decor · n`) for the decor and route rows;
+  - an icon picker dropdown, "+ Add hostel" from the canonical list only, and the Unverified / In the sea badges;
+  - the editor became a window-high shell whose panel scrolls on its own.
+  - Tests: 93 new unit tests (386 in all) and 17 new render checks (36 in all). The decisions are in `docs/decisions.md` under "Editor shell", "Editing" and "Autosave".
 - **Work:**
   - `state.ts` and `autosave.ts`.
   - Rows for hostels (toggle, label, coords, side ↓↑→←, badges, ×, add from canonical list), attractions (+ icon picker dropdown), decor (icon, size 20–140, Show on), and routes (From → To over visible hostels, bend −1…1, Show on; needs 2 hostels).
