@@ -27,8 +27,20 @@ export const RING_COUNT = RING_OPACITY.length;
 export const ON_DARK_ALPHA = 0.44;
 export const COAST_STROKE = 9;
 
-/** Photoshop "Ombra esterna": black 25 %, distance 0, spread 5 %, size 9 px. */
-export const SHADOW = { opacity: 0.25, dilate: 0.5, blur: 4.5 } as const;
+/** Gradient vectors in the shape's bounding box: the halo runs left → right, the land top-right → bottom-left. */
+export const GRADIENT = {
+  halo: { x1: 0, y1: 0, x2: 1, y2: 0 },
+  land: { x1: 1, y1: 0, x2: 0, y2: 1 },
+} as const;
+
+/** Photoshop "Ombra esterna": black 25 %, distance 0, spread 5 %, size 9 px. The region leaves room for the blur. */
+export const SHADOW = {
+  color: '#000',
+  opacity: 0.25,
+  dilate: 0.5,
+  blur: 4.5,
+  region: { x: '-40%', y: '-60%', width: '180%', height: '220%' },
+} as const;
 
 /* Hostel pin: tip at 0,0, head centre 0,−30, radius 16, hole radius 7. The hole
    is transparent so it shows the teal land or the dark ring underneath. */
