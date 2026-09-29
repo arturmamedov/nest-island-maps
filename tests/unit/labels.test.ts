@@ -4,8 +4,10 @@ import {
   clampLabel,
   hasLeader,
   headOffset,
+  labelCentreBox,
   labelLook,
   labelWidth,
+  nudgeRange,
   pillMetrics,
   placeLabel,
   type MarkerKind,
@@ -118,6 +120,26 @@ describe('clamping', () => {
   it('leaves a label inside the box alone', () => {
     close(clampLabel({ x: 540, y: 540 }, w, h), [540, 540]);
   });
+
+  it('clamps to the centre box the drag shares', () => {
+    expect(labelCentreBox(w, h)).toEqual({ x0: 62, x1: 1018, y0: 29.75, y1: 1022.25 });
+  });
+});
+
+describe('nudge range', () => {
+  it('is the whole-pixel dx and dy that keep the pill inside the box, from where the label sits un-nudged', () => {
+    expect(nudgeRange({ x: 540.4, y: 500 }, 100, 35.5)).toEqual({ dx: [-478, 477], dy: [-470, 522] });
+  });
+
+  it('puts the pill inside the box at both ends', () => {
+    const base = { x: 700.37, y: 120.81 };
+    const { dx, dy } = nudgeRange(base, 100, 35.5);
+    for (const x of dx) for (const y of dy) close(clampLabel({ x: base.x + x, y: base.y + y }, 100, 35.5), [base.x + x, base.y + y]);
+  });
+
+  it('comes out inverted for a label wider than the box, which the clamp then pins to the right', () => {
+    expect(nudgeRange({ x: 540, y: 500 }, 1100, 35.5).dx).toEqual([22, -22]);
+  });
 });
 
 describe('leader lines', () => {
@@ -134,6 +156,8 @@ describe('leader lines', () => {
     const placed = placeLabel({ kind: 'pin', side: 'right', dx: 16, dy: -46, at, pinSize: 0.9, w: 100, h: 35.5 });
     // Anchor x = 1000 + 72.4 + 16 is clamped to 1068 − 50.
     close(placed, [1018, 500 - 27 - 46]);
+    // Where the label sits before the nudge and the clamp: the drag measures its range from here.
+    close(placed.base, [1072.4, 473]);
     expect(placed.leader).not.toBeNull();
     close({ x: placed.leader!.x1, y: placed.leader!.y1 }, [1000, 473]);
     close({ x: placed.leader!.x2, y: placed.leader!.y2 }, [1018, 427]);

@@ -1,4 +1,4 @@
-import { project, type ProjectionConstants } from './geo.js';
+import { project, unproject, type Point, type ProjectionConstants } from './geo.js';
 import { ARTBOARD } from './tokens.js';
 
 /* The "Lat, lng" row input takes what Google Maps copies when you right-click
@@ -36,3 +36,25 @@ export function parseCoords(text: string, projection?: ProjectionConstants): Coo
 }
 
 export const formatCoords = (lat: number, lng: number) => `${lat}, ${lng}`;
+
+/** Decimal places kept for a point made on the map: about a metre, where a pixel is well over 100 m. */
+export const LATLNG_PLACES = 5;
+
+/* Half a pixel in from each edge: rounding to 5 decimals moves a point by
+   under 0.01 px, so a point clamped here can never be rounded off the
+   artboard, and the edits' own off-map rule never refuses a click or a drag. */
+const EDGE = 0.5;
+
+/** Keeps an artboard position on the artboard, half a pixel inside its edges. */
+export function clampToArtboard(p: Point): Point {
+  const clamp = (v: number) => Math.min(ARTBOARD - EDGE, Math.max(EDGE, v));
+  return { x: clamp(p.x), y: clamp(p.y) };
+}
+
+/** The lat/lng under an artboard position (a click, a drop, the centre), kept on the artboard, to 5 decimals. */
+export function latLngAt(projection: ProjectionConstants, p: Point): { lat: number; lng: number } {
+  const c = clampToArtboard(p);
+  const { lat, lng } = unproject(projection, c.x, c.y);
+  const round = (n: number) => Math.round(n * 10 ** LATLNG_PLACES) / 10 ** LATLNG_PLACES;
+  return { lat: round(lat), lng: round(lng) };
+}

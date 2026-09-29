@@ -68,10 +68,30 @@ export function headOffset(kind: MarkerKind, pinSize: number): Point {
   return { x: 0, y: kind === 'pin' ? PIN.headY * pinSize : 0 };
 }
 
+/** Where the centre of a w × h pill may go so the pill stays inside LABEL_BOX. The clamp and the editor's label drag share it. */
+export function labelCentreBox(w: number, h: number) {
+  return { x0: LABEL_BOX.x0 + w / 2, x1: LABEL_BOX.x1 - w / 2, y0: LABEL_BOX.y0 + h / 2, y1: LABEL_BOX.y1 - h / 2 };
+}
+
+/** Min before max, so a pill wider than the box is pinned to its right (or bottom) edge; the drag clamps the same way. */
+export const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+
 /** Clamps a label centre so a w × h pill stays inside LABEL_BOX. */
 export function clampLabel(p: Point, w: number, h: number): Point {
-  const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
-  return { x: clamp(p.x, LABEL_BOX.x0 + w / 2, LABEL_BOX.x1 - w / 2), y: clamp(p.y, LABEL_BOX.y0 + h / 2, LABEL_BOX.y1 - h / 2) };
+  const b = labelCentreBox(w, h);
+  return { x: clamp(p.x, b.x0, b.x1), y: clamp(p.y, b.y0, b.y1) };
+}
+
+/** A whole-pixel range per axis, [lowest, highest]. */
+export type NudgeRange = { dx: [number, number]; dy: [number, number] };
+
+/* The nudges a drag may store: whole pixels that keep the pill inside the
+   box, measured from where the label sits before any nudge. Rounded inwards,
+   so both ends are drawn exactly where the nudge says. */
+/** The whole-pixel dx and dy that keep a w × h pill, centred on `base` plus the nudge, inside LABEL_BOX. */
+export function nudgeRange(base: Point, w: number, h: number): NudgeRange {
+  const b = labelCentreBox(w, h);
+  return { dx: [Math.ceil(b.x0 - base.x), Math.floor(b.x1 - base.x)], dy: [Math.ceil(b.y0 - base.y), Math.floor(b.y1 - base.y)] };
 }
 
 /** A label nudged further than LEADER.minOffset gets a leader line back to its marker. */
@@ -81,15 +101,17 @@ export function hasLeader(dx: number, dy: number): boolean {
 
 export type Leader = { x1: number; y1: number; x2: number; y2: number };
 
-export type PlacedLabel = Point & { leader: Leader | null };
+/** The label centre, and `base`: where it sits before the nudge and the clamp. */
+export type PlacedLabel = Point & { base: Point; leader: Leader | null };
 
 /** Anchor, then the free dx/dy nudge, then the clamp. The leader rule looks at the raw nudge. */
 export function placeLabel(o: { kind: MarkerKind; side: Side; dx: number; dy: number; at: Point; pinSize: number; w: number; h: number }): PlacedLabel {
   const a = anchorOffset(o.kind, o.side, o.pinSize, o.w, o.h);
-  const c = clampLabel({ x: o.at.x + a.x + o.dx, y: o.at.y + a.y + o.dy }, o.w, o.h);
+  const base = { x: o.at.x + a.x, y: o.at.y + a.y };
+  const c = clampLabel({ x: base.x + o.dx, y: base.y + o.dy }, o.w, o.h);
   const head = headOffset(o.kind, o.pinSize);
   const leader = hasLeader(o.dx, o.dy) ? { x1: o.at.x + head.x, y1: o.at.y + head.y, x2: c.x, y2: c.y } : null;
-  return { ...c, leader };
+  return { ...c, base, leader };
 }
 
 /** `fill: null` is the text-only style: no pill and no shadow, the text carries a white halo instead. */

@@ -1,7 +1,7 @@
 import { clusterHostels } from './cluster.js';
 import { pathPolygons, pointInPolygons, project, type Point } from './geo.js';
 import { ICONS } from './icons.js';
-import { labelLook, labelWidth, pillMetrics, placeLabel, type Leader, type MarkerKind, type TextMeasurer } from './labels.js';
+import { labelLook, labelWidth, nudgeRange, pillMetrics, placeLabel, type Leader, type MarkerKind, type NudgeRange, type TextMeasurer } from './labels.js';
 import type { Geometry, IslandData, Layer, LabelPlacement, ShowOn } from './schema.js';
 import {
   BADGE,
@@ -45,6 +45,8 @@ export type LabelShape = {
   rect: { x: number; y: number; w: number; h: number; r: number };
   fill: string | null;
   color: string;
+  /** The whole-pixel dx/dy that keep this pill inside the box. The renderer ignores it; the editor's label drag clamps to it. */
+  nudge: NudgeRange;
 };
 /** Shared by every label of a map. `halo` is the white stroke width of the text-only style, 0 otherwise. */
 export type LabelText = { family: string; weight: number; size: number; letterSpacing: number; x: number; y: number; halo: number };
@@ -187,6 +189,7 @@ export function computeMapLayout(geometry: Geometry, data: IslandData, layer: La
       rect: { x: -halfW, y: -halfH, w, h, r: m2(metrics.r) },
       fill: look.fill,
       color: look.color,
+      nudge: nudgeRange(placed.base, w, h),
     };
   });
 

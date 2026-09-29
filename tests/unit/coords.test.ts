@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { formatCoords, onArtboard, parseCoords } from '../../src/shared/coords.js';
-import { ISLANDS } from '../../src/shared/islands.js';
+import { clampToArtboard, formatCoords, latLngAt, onArtboard, parseCoords } from '../../src/shared/coords.js';
+import { project } from '../../src/shared/geo.js';
+import { ISLAND_LIST, ISLANDS } from '../../src/shared/islands.js';
 
 const tenerife = ISLANDS.tenerife.geometry.projection;
 
@@ -62,5 +63,41 @@ describe('formatCoords', () => {
     const text = formatCoords(28.0455, -16.5385);
     expect(text).toBe('28.0455, -16.5385');
     expect(parseCoords(text)).toEqual({ ok: true, lat: 28.0455, lng: -16.5385 });
+  });
+});
+
+describe('clampToArtboard', () => {
+  it('keeps a point half a pixel inside the artboard', () => {
+    expect(clampToArtboard({ x: 540, y: 12.3 })).toEqual({ x: 540, y: 12.3 });
+    expect(clampToArtboard({ x: -40, y: 2000 })).toEqual({ x: 0.5, y: 1079.5 });
+    expect(clampToArtboard({ x: 1080, y: 0 })).toEqual({ x: 1079.5, y: 0.5 });
+  });
+});
+
+describe('latLngAt', () => {
+  const fiveDecimals = (n: number) => expect(Math.round(n * 1e5) / 1e5).toBe(n);
+
+  it('is the point under an artboard position, to 5 decimals, which projects back within 0.01 px', () => {
+    for (const { geometry } of ISLAND_LIST) {
+      for (const p of [{ x: 540, y: 540 }, { x: 100.3, y: 900.7 }, { x: 1.2, y: 1078.9 }]) {
+        const at = latLngAt(geometry.projection, p);
+        fiveDecimals(at.lat);
+        fiveDecimals(at.lng);
+        const back = project(geometry.projection, at.lat, at.lng);
+        expect(Math.abs(back.x - p.x)).toBeLessThan(0.01);
+        expect(Math.abs(back.y - p.y)).toBeLessThan(0.01);
+      }
+    }
+  });
+
+  it('keeps every point on the artboard, so the edits never refuse a click or a drag at the edge', () => {
+    for (const { geometry } of ISLAND_LIST) {
+      for (const p of [{ x: -50, y: 540 }, { x: 2000, y: -3 }, { x: 0, y: 0 }, { x: 1080, y: 1080 }]) {
+        const at = latLngAt(geometry.projection, p);
+        expect(onArtboard(geometry.projection, at.lat, at.lng)).toBe(true);
+      }
+      const edge = latLngAt(geometry.projection, { x: -50, y: 540 });
+      expect(project(geometry.projection, edge.lat, edge.lng).x).toBeCloseTo(0.5, 1);
+    }
   });
 });

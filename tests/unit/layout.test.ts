@@ -4,7 +4,7 @@ import { ISLANDS } from '../../src/shared/islands.js';
 import type { TextMeasurer } from '../../src/shared/labels.js';
 import { computeMapLayout, type MapLayout } from '../../src/shared/layout.js';
 import { ISLAND_IDS, LAYERS, type IslandData, type IslandId, type Settings } from '../../src/shared/schema.js';
-import { PALETTES, WHITE } from '../../src/shared/tokens.js';
+import { LABEL_BOX, PALETTES, WHITE } from '../../src/shared/tokens.js';
 
 /* computeMapLayout turns one island file into the primitives <IslandMap>
    draws, already rounded. These tests pin the rules of handoff README §1
@@ -231,6 +231,31 @@ describe('markers and labels', () => {
     expect(l.labels.every((x) => x.fill === null)).toBe(true);
     expect(l.text.halo).toBe(8);
     expect(layoutOf('tenerife', 'hostels').text.halo).toBe(0);
+  });
+
+  it('gives each label the whole-pixel nudge range that keeps its pill inside the box, for the editor’s drag', () => {
+    for (const layer of LAYERS) {
+      const l = layoutOf('tenerife', layer);
+      const items = layer === 'hostels' ? ISLANDS.tenerife.seed.hostels : ISLANDS.tenerife.seed.attractions;
+      for (const label of l.labels) {
+        const { dx, dy } = label.nudge;
+        for (const n of [...dx, ...dy]) expect(Number.isInteger(n)).toBe(true);
+        expect(dx[0]).toBeLessThanOrEqual(dx[1]);
+        expect(dy[0]).toBeLessThanOrEqual(dy[1]);
+        // Nudged to each corner of its range, the pill stays in the box without being clamped.
+        for (const [x, y] of [[dx[0], dy[0]], [dx[1], dy[1]]] as const) {
+          const moved = layoutOf('tenerife', layer, {}, (d) => ({
+            ...d,
+            [layer]: items.map((i) => (('slug' in i ? i.slug : i.id) === label.key ? { ...i, labelPlacement: { ...i.labelPlacement, dx: x, dy: y } } : i)),
+          })).labels.find((m) => m.key === label.key)!;
+          expect(moved.x + moved.rect.x).toBeGreaterThanOrEqual(LABEL_BOX.x0 - 0.05);
+          expect(moved.x - moved.rect.x).toBeLessThanOrEqual(LABEL_BOX.x1 + 0.05);
+          expect(moved.y + moved.rect.y).toBeGreaterThanOrEqual(LABEL_BOX.y0 - 0.05);
+          expect(moved.y - moved.rect.y).toBeLessThanOrEqual(LABEL_BOX.y1 + 0.05);
+          expect(moved.nudge).toEqual(label.nudge);
+        }
+      }
+    }
   });
 
   it('text sits at x = ls/2, y = fs·0.36 in the label face', () => {
