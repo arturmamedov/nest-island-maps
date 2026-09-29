@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Page } from '@playwright/test';
+import type { ProjectionConstants } from '../../src/shared/geo.js';
 // JSON-free modules only: Playwright's ESM loader refuses schema.ts's JSON imports.
 import { ISLAND_IDS, LAYERS, TAB_LABELS, type TABS } from '../../src/shared/ids.js';
 
@@ -13,7 +14,12 @@ export const ROOT = join(import.meta.dirname, '..', '..');
 export type IslandId = (typeof ISLAND_IDS)[number];
 export type Layer = (typeof LAYERS)[number];
 
-export const islandName = (id: IslandId): string => JSON.parse(readFileSync(join(ROOT, 'data/geometry', `${id}.geo.json`), 'utf8')).name;
+const geometryOf = (id: IslandId) => JSON.parse(readFileSync(join(ROOT, 'data/geometry', `${id}.geo.json`), 'utf8'));
+
+export const islandName = (id: IslandId): string => geometryOf(id).name;
+
+/** The island's projection constants, from its committed geometry file (the app reads the same). */
+export const projectionOf = (id: IslandId): ProjectionConstants => geometryOf(id).projection;
 
 /** The committed seed file's text. */
 export const seedText = (id: IslandId): string => readFileSync(join(ROOT, 'data/seed', `${id}.json`), 'utf8');
@@ -22,8 +28,11 @@ export const seedText = (id: IslandId): string => readFileSync(join(ROOT, 'data/
 export const tabOf = (page: Page, tab: (typeof TABS)[number]) =>
   page.getByRole('tablist', { name: 'Map' }).getByRole('tab', { name: new RegExp(`^${TAB_LABELS[tab]} · `) });
 
+/** An island in the header's switcher. */
+export const islandTab = (page: Page, island: IslandId) => page.getByRole('tablist', { name: 'Island' }).getByRole('tab', { name: islandName(island), exact: true });
+
 export async function selectMap(page: Page, island: IslandId, layer: Layer) {
-  await page.getByRole('tablist', { name: 'Island' }).getByRole('tab', { name: islandName(island), exact: true }).click();
+  await islandTab(page, island).click();
   await tabOf(page, layer).click();
 }
 
