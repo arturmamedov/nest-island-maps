@@ -1,5 +1,5 @@
 import type { PointerEvent } from 'react';
-import type { TextMeasurer } from '../shared/labels';
+import type { NudgeRange, TextMeasurer } from '../shared/labels';
 import { BADGE_ICON, computeMapLayout, type DecorShape, type LabelShape, type LabelText, type MarkerShape } from '../shared/layout';
 import type { Geometry, IslandData, Layer } from '../shared/schema';
 import { ARTBOARD, ATTRIBUTION, BADGE, COAST_STROKE, DOT, GRADIENT, ICON_BOX, LEADER, PIN_PATH, ROUTE, SHADOW, WHITE } from '../shared/tokens';
@@ -20,7 +20,8 @@ import { canvasMeasurer } from './measure';
    Edit mode is the `interaction` prop and adds only transparent data-hit
    rects and cursor styles; a test holds the rest of the markup identical. */
 
-export type LabelTarget = { layer: Layer; key: string };
+/** A label under the pointer: its row, and the nudges that keep its pill inside the box, as laid out. */
+export type LabelTarget = { layer: Layer; key: string; nudge: NudgeRange };
 
 export type MapInteraction = {
   /** Pointer down on a label; `key` is the hostel slug or the attraction id. */
@@ -195,7 +196,7 @@ function Label({ label: l, text: t, shadow, layer, interaction }: LabelProps) {
       id={l.id}
       transform={`translate(${l.x} ${l.y})`}
       style={interaction ? { cursor: 'grab' } : undefined}
-      onPointerDown={interaction && ((e) => interaction.onLabelPointerDown?.(e, { layer, key: l.key }))}
+      onPointerDown={interaction && ((e) => interaction.onLabelPointerDown?.(e, { layer, key: l.key, nudge: l.nudge }))}
     >
       {l.fill !== null && <rect x={l.rect.x} y={l.rect.y} width={l.rect.w} height={l.rect.h} rx={l.rect.r} fill={l.fill} filter={shadow} />}
       {/* x = ls/2 offsets the trailing tracking; the baseline y centres the capitals (Figma ignores dominant-baseline). */}
