@@ -10,6 +10,7 @@ import {
   importFile,
   markVerified,
   missingHostels,
+  placeAt,
   remove,
   resetIsland,
   setBend,
@@ -17,6 +18,7 @@ import {
   setDecorSize,
   setIcon,
   setLabel,
+  setNudge,
   setSettings,
   setSide,
   setVisible,
@@ -144,6 +146,10 @@ describe('coordinates', () => {
     refused(tryEdit(T.seed, T, setCoords('hostels', 'adeje-nest', { lat: -16.73, lng: 28.12 })), OFF_MAP);
   });
 
+  it('moves a decor icon too', () => {
+    expect(ok(setCoords('decor', 'sun', { lat: 28.5, lng: -16.8 })).decor.find((x) => x.id === 'sun')).toMatchObject({ lat: 28.5, lng: -16.8 });
+  });
+
   it('marks a hostel verified, and moving it clears the flag again (decision 13)', () => {
     const verified = ok(markVerified('adeje-nest'));
     expect(hostel(verified, 'adeje-nest').coordsVerified).toBe(true);
@@ -166,6 +172,73 @@ describe('label side', () => {
 
   it('does nothing when the side is already chosen, so hand-set nudges survive a stray click', () => {
     expect(hostel(ok(setSide('hostels', 'medano-nest', 'right')), 'medano-nest').labelPlacement).toEqual({ side: 'right', dx: 16, dy: 0 });
+  });
+});
+
+describe('label nudge (a label drag)', () => {
+  it('sets dx and dy in whole pixels and keeps the side', () => {
+    const d = ok(setNudge('hostels', 'adeje-nest', { dx: 56.6, dy: -40.4 }));
+    expect(hostel(d, 'adeje-nest').labelPlacement).toEqual({ side: 'right', dx: 57, dy: -40 });
+    expect(ok(setNudge('attractions', 'teide', { dx: -3, dy: 12 })).attractions[0]!.labelPlacement).toEqual({ side: 'above', dx: -3, dy: 12 });
+    // Never −0, which would read back differently from the 0 it writes.
+    expect(Object.is(hostel(ok(setNudge('hostels', 'adeje-nest', { dx: -0.4, dy: 5 })), 'adeje-nest').labelPlacement.dx, 0)).toBe(true);
+  });
+
+  it('leaves the file as it was when the nudge does not change', () => {
+    expect(bytes(ok(setNudge('hostels', 'medano-nest', { dx: 16.2, dy: -0.3 })))).toBe(bytes(T.seed));
+  });
+
+  it('refuses a row that is not on the map', () => {
+    refused(tryEdit(T.seed, T, setNudge('hostels', 'cisne-nest', { dx: 1, dy: 1 })), /not on this map/);
+  });
+});
+
+describe('a point from the map (a click or a drag)', () => {
+  const p = { x: 612.4, y: 377.9 };
+  const near = (island: IslandEntry, item: { lat: number; lng: number }, q: { x: number; y: number }) => {
+    const back = at(island, item);
+    expect(Math.abs(back.x - q.x)).toBeLessThan(0.01);
+    expect(Math.abs(back.y - q.y)).toBeLessThan(0.01);
+    // 5 decimals, as every point made on the map.
+    expect(item.lat).toBe(Math.round(item.lat * 1e5) / 1e5);
+    expect(item.lng).toBe(Math.round(item.lng * 1e5) / 1e5);
+  };
+
+  it('adds a spot or an icon where the map was clicked', () => {
+    near(T, ok(addAttraction(p)).attractions.at(-1)!, p);
+    near(T, ok(addDecor(p)).decor.at(-1)!, p);
+  });
+
+  it('adds a missing hostel where the map was clicked: its seed label and label placement, unverified', () => {
+    const verifiedSeed: IslandEntry = { ...T, seed: { ...T.seed, hostels: T.seed.hostels.map((h) => ({ ...h, coordsVerified: true })) } };
+    const d = ok(addHostel('adeje-nest', p), verifiedSeed, chain(verifiedSeed, remove('hostels', 'adeje-nest')));
+    const h = hostel(d, 'adeje-nest');
+    near(T, h, p);
+    expect(h).toMatchObject({ label: 'Adeje', coordsVerified: false, visible: true });
+    expect(h.labelPlacement).toEqual(hostel(T.seed, 'adeje-nest').labelPlacement);
+  });
+
+  it('moves a decor icon, a spot or a hostel there; a moved hostel is unverified again (decision 13)', () => {
+    near(T, ok(placeAt('decor', 'sun', p)).decor.find((x) => x.id === 'sun')!, p);
+    near(T, ok(placeAt('attractions', 'teide', p)).attractions[0]!, p);
+    const moved = hostel(ok(placeAt('hostels', 'puerto-nest', p), T, ok(markVerified('puerto-nest'))), 'puerto-nest');
+    near(T, moved, p);
+    expect(moved.coordsVerified).toBe(false);
+  });
+
+  it('keeps the flag when the point does not move', () => {
+    const verified = ok(markVerified('puerto-nest'));
+    const same = ok(placeAt('hostels', 'puerto-nest', at(T, hostel(verified, 'puerto-nest'))), T, verified);
+    expect(hostel(same, 'puerto-nest').coordsVerified).toBe(true);
+  });
+
+  it('keeps a point dragged off the artboard on its edge', () => {
+    const sun = ok(placeAt('decor', 'sun', { x: -100, y: 540 })).decor.find((x) => x.id === 'sun')!;
+    expect(at(T, sun).x).toBeCloseTo(0.5, 1);
+  });
+
+  it('refuses a row that is not on the map', () => {
+    refused(tryEdit(T.seed, T, placeAt('decor', 'nope', p)), /not on this map/);
   });
 });
 
@@ -401,6 +474,13 @@ describe('every edit keeps the file valid', () => {
       [IB, addHostel('flamingo-nest')],
       [IB, addRoute()],
       [IB, setSide('attractions', 'es-vedra', 'left')],
+      [IB, setNudge('attractions', 'es-vedra', { dx: -30.4, dy: 18.6 })],
+      [IB, placeAt('decor', 'sun', { x: 1200, y: -5 })],
+      [IB, addAttraction({ x: 400, y: 610 })],
+      [GC, addDecor({ x: 20, y: 1060 })],
+      [GC, placeAt('hostels', 'pura-vida-nest', { x: 560, y: 480 })],
+      [T, remove('hostels', 'adeje-nest')],
+      [T, addHostel('adeje-nest', { x: 300, y: 650 })],
     ];
     let ws = seedWorkspace();
     for (const [island, edit] of script) {

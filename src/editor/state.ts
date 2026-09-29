@@ -1,6 +1,6 @@
-import { OFF_MAP, onArtboard } from '../shared/coords';
+import { latLngAt, OFF_MAP, onArtboard } from '../shared/coords';
 import { issueText, parseDataFile } from '../shared/datafile';
-import { unproject } from '../shared/geo';
+import type { Point } from '../shared/geo';
 import type { IconId } from '../shared/icons';
 import type { IslandEntry } from '../shared/islands';
 import {
@@ -37,6 +37,8 @@ type Items = { hostels: Hostel; attractions: Attraction; decor: Decor; routes: R
 export type Collection = keyof Items;
 /** The rows drawn as points with labels: hostels on one map, things to do on the other. */
 export type PointKind = 'hostels' | 'attractions';
+/** The rows that stand on a lat/lng: the points, and the decor icons. */
+export type Located = PointKind | 'decor';
 
 /** The prototype's message, kept word for word. */
 export const ROUTE_NEEDS_TWO = 'A route needs two hostels on this island';
@@ -86,11 +88,13 @@ function update<C extends Collection>(
 const round = (n: number, places: number) => Math.round(n * 10 ** places) / 10 ** places;
 const below = (): LabelPlacement => ({ side: 'below', dx: 0, dy: 0 });
 
-/** The artboard centre on the map (spec §2 "+ Add row"), to 5 decimals: about a metre, where a pixel is over 100 m. */
-function centre(island: IslandEntry) {
-  const { lat, lng } = unproject(island.geometry.projection, ARTBOARD / 2, ARTBOARD / 2);
-  return { lat: round(lat, 5), lng: round(lng, 5) };
-}
+/** Where "+ Add row", "+ Add icon" and a new canonical hostel land without a click: the artboard centre (spec §2). */
+export const CENTRE: Point = { x: ARTBOARD / 2, y: ARTBOARD / 2 };
+
+/* A point made on the map (a click, a drop, the centre) is an artboard
+   position turned into lat/lng once, here, by the island's projection: the
+   data only ever holds lat/lng, and pins come from it (README ground rules). */
+const latLngOf = (island: IslandEntry, at: Point) => latLngAt(island.geometry.projection, at);
 
 /* Ids are set once, at creation: they are the row's identity and, prefixed by
    the layout (spot-, decor-, route-), Figma's layer names. Renaming a row or
@@ -112,8 +116,8 @@ export const setVisible = (collection: Collection, key: string, visible: boolean
   update(collection, key, (item) => ({ ...item, visible }));
 
 /** Refuses points off the artboard, by the paste parser's own rule. */
-export const setCoords = (kind: PointKind, key: string, at: { lat: number; lng: number }): IslandEdit =>
-  update(kind, key, (item, _data, island) => {
+export const setCoords = (collection: Located, key: string, at: { lat: number; lng: number }): IslandEdit =>
+  update(collection, key, (item, _data, island) => {
     if (!onArtboard(island.geometry.projection, at.lat, at.lng)) return OFF_MAP;
     if (item.lat === at.lat && item.lng === at.lng) return item;
     const moved = { ...item, lat: at.lat, lng: at.lng };
@@ -121,8 +125,23 @@ export const setCoords = (kind: PointKind, key: string, at: { lat: number; lng: 
     return 'coordsVerified' in moved ? { ...moved, coordsVerified: false } : moved;
   });
 
+/** A point moved to an artboard position: a decor drag, or "⌖ Place on map" and a click. */
+export const placeAt =
+  (collection: Located, key: string, at: Point): IslandEdit =>
+  (data, island) =>
+    setCoords(collection, key, latLngOf(island, at))(data, island);
+
 /** What a click on the unverified badge does (decision 13). */
 export const markVerified = (slug: string): IslandEdit => update('hostels', slug, (h) => ({ ...h, coordsVerified: true }));
+
+/** A label drag: the nudge in whole pixels (the drag has already clamped it to the box), the side kept. */
+export const setNudge = (kind: PointKind, key: string, nudge: { dx: number; dy: number }): IslandEdit =>
+  update(kind, key, (item) => {
+    // + 0 turns Math.round's −0 into 0.
+    const [dx, dy] = [Math.round(nudge.dx) + 0, Math.round(nudge.dy) + 0];
+    const p = item.labelPlacement;
+    return p.dx === dx && p.dy === dy ? item : { ...item, labelPlacement: { ...p, dx, dy } };
+  });
 
 /** A new side clears the drag nudge (spec §2); the side already chosen changes nothing, so a stray click keeps hand-set nudges. */
 export const setSide = (kind: PointKind, key: string, side: Side): IslandEdit =>
@@ -148,9 +167,12 @@ export const missingHostels = (data: IslandData, island: IslandEntry): Canonical
 /* Decision 3: only a real hostel of this island, and back as the seed had it,
    in its seed place, so removing and re-adding one leaves no diff. A hostel
    the seed doesn't have yet (after a future sync:hostels) starts at the
-   centre under its canonical name: a real name, never an invented one. */
+   centre under its canonical name: a real name, never an invented one.
+   Placed with a click, it keeps its seed label and label placement (side and
+   nudge, as every move does) but stands where the map was clicked,
+   unverified: a click is only an approximation of the pin. */
 export const addHostel =
-  (slug: string): IslandEdit =>
+  (slug: string, at?: Point): IslandEdit =>
   (data, island) => {
     const canonical = canonicalHostels(island.id).find((h) => h.slug === slug);
     if (!canonical) return refuse(`${slug} is not a ${island.name} hostel`);
@@ -160,7 +182,9 @@ export const addHostel =
     if (!hostel) {
       const label = parseLabel(canonical.name, island.id);
       if (!label.ok) return refuse(`${canonical.name}: ${label.error}`);
-      hostel = { slug, label: label.label, ...centre(island), coordsVerified: false, labelPlacement: below(), visible: true };
+      hostel = { slug, label: label.label, ...latLngOf(island, at ?? CENTRE), coordsVerified: false, labelPlacement: below(), visible: true };
+    } else if (at) {
+      hostel = { ...hostel, ...latLngOf(island, at), coordsVerified: false };
     }
 
     const seedOrder = island.seed.hostels.map((h) => h.slug);
@@ -169,12 +193,12 @@ export const addHostel =
     return done({ ...data, hostels: i < 0 ? [...data.hostels, hostel] : data.hostels.toSpliced(i, 0, hostel) });
   };
 
-/** "+ Add row" on Things to do: a "New spot" at the artboard centre. */
+/** "+ Add row" on Things to do: a "New spot" at the artboard centre, or where the map was clicked. */
 export const addAttraction =
-  (): IslandEdit =>
+  (at: Point = CENTRE): IslandEdit =>
   (data, island) => {
     const id = uniqueId('new-spot', data.attractions.map((a) => a.id));
-    const spot: Attraction = { id, label: NEW_SPOT.label, ...centre(island), icon: NEW_SPOT.icon, labelPlacement: below(), visible: true };
+    const spot: Attraction = { id, label: NEW_SPOT.label, ...latLngOf(island, at), icon: NEW_SPOT.icon, labelPlacement: below(), visible: true };
     return done({ ...data, attractions: [...data.attractions, spot] });
   };
 
@@ -193,12 +217,12 @@ export const setDecorSize = (id: string, size: number): IslandEdit =>
 export const cycleShowOn = (collection: 'decor' | 'routes', id: string): IslandEdit =>
   update(collection, id, (item) => ({ ...item, showOn: SHOW_ON[(SHOW_ON.indexOf(item.showOn) + 1) % SHOW_ON.length]! }));
 
-/** "+ Add icon": named after its icon, as the seed decor is (sun, sun-2…). */
+/** "+ Add icon": named after its icon, as the seed decor is (sun, sun-2…), at the centre or where the map was clicked. */
 export const addDecor =
-  (): IslandEdit =>
+  (at: Point = CENTRE): IslandEdit =>
   (data, island) => {
     const id = uniqueId(NEW_DECOR.icon, data.decor.map((d) => d.id));
-    return done({ ...data, decor: [...data.decor, { id, icon: NEW_DECOR.icon, ...centre(island), size: NEW_DECOR.size, showOn: NEW_DECOR.showOn, visible: true }] });
+    return done({ ...data, decor: [...data.decor, { id, icon: NEW_DECOR.icon, ...latLngOf(island, at), size: NEW_DECOR.size, showOn: NEW_DECOR.showOn, visible: true }] });
   };
 
 // Routes.
