@@ -1,6 +1,6 @@
 # Nest Island Maps — v1 implementation plan
 
-> **Status:** approved by the owner on 2026-09-27. M1 done on 2026-09-27 (branch `feat/v1`, commits `c10c8f2`…`3539c25`). M2 done on 2026-09-28 (commits `ec13684`…`8f8e48e`). M3 done on 2026-09-28 (commits `9f5755d`…`b8f74e2`). M4 done on 2026-09-28 (commits `402aba7`…`5e96c51`). M5 is next.
+> **Status:** approved by the owner on 2026-09-27. M1 done on 2026-09-27 (branch `feat/v1`, commits `c10c8f2`…`3539c25`). M2 done on 2026-09-28 (commits `ec13684`…`8f8e48e`). M3 done on 2026-09-28 (commits `9f5755d`…`b8f74e2`). M4 done on 2026-09-28 (commits `402aba7`…`5e96c51`). M5 done on 2026-09-28 (commits `eed6009`…`5d231ba`). M6 is next.
 
 ## Context
 
@@ -192,7 +192,13 @@ Export comes before editing because font-embedded rasterising is the riskiest pi
     - reset
 - **Verify:** `npm run typecheck; npm test; npm run test:render`.
 
-### M5 – Direct manipulation
+### M5 – Direct manipulation (done 2026-09-28)
+- **Done as planned,** plus a few additions:
+  - the owner chose both kinds of hostel placing: a missing hostel dropped at the click, and "⌖ Place on map" on every point row, which moves that point to the next click (unverified, as a click only approximates the pin);
+  - on the Decor tab a thumbnail puts its map on the stage and the tab stays (the owner's choice), since only the large map is edited on;
+  - the stored label nudge is clamped to the box the layout clamps to (`LabelShape.nudge`), and one function (`latLngAt`) turns every click, drop and centre into lat/lng;
+  - the thumbnails are buttons, and a keyboard choice moves focus to the large map.
+  - Tests: 34 new unit tests (420 in all) and 10 new render checks (46 in all). The decisions are in `docs/decisions.md` under "Direct manipulation".
 - **Work:**
   - `useDrag` with pointer capture and a 3 px threshold, so a drag is never a click. It scales by `1080 / renderedWidth`.
   - Label drag sets `dx`/`dy`. Decor drag unprojects to lat/lng and switches to the Decor tab.

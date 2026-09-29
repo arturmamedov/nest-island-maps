@@ -67,14 +67,14 @@ Where the app deliberately differs from the handoff prototype (`design_handoff_i
   - the draft notices, when there are any (see "Autosave");
   - the stage, with the selected map large and the other five as thumbnails, all drawn by `IslandMap`;
   - a side panel of about 460 px, top to bottom:
-    - the prototype's intro ("Data · Edit, add, remove · saved in this browser", "Map data"), without its drag and click sentences until M5;
+    - the prototype's intro ("Data · Edit, add, remove · saved in this browser", "Map data", and its text, ending "drag a label to move it. Click any map to edit it here.");
     - the rows of the current tab;
     - Settings;
     - Export, titled with the map it exports ("Export Tenerife · Hostels"), since the Decor tab isn't a map;
     - Island data (Import JSON, Reset island);
     - the status line.
   - On a wide screen the editor is one window-high shell: the stage and the panel scroll on their own, and the status line stays in view. Below 1100 px everything stacks and the page scrolls.
-  - Clicking a thumbnail to select it is M5.
+  - Each thumbnail is a button that puts its map on the stage (see "Direct manipulation").
 - **Decor is a tab, not a map.** On it, the stage keeps the last map shown, and both of the island's maps are outlined, as in the prototype, because decor belongs to both.
 - **The preview background sits in Settings, under Colours,** marked "never exported". It moved there from the header in M4. It is a per-browser preference in `localStorage` (`nest-island-maps.previewBackground`), never in the island data or an export. It falls back to White when storage is missing or throws.
 - **Settings follow the prototype's groups:** Colours, Labels, Markers, Island, with the ranges of `tokens.ts`. The font is a select; the other choices are segmented controls, built as pressed buttons in a named group (plain buttons in the tab order, like the preview chips, rather than radios without radio keys); rings is 0–4. The caption says "Both `<Island>` maps share these."
@@ -82,7 +82,7 @@ Where the app deliberately differs from the handoff prototype (`design_handoff_i
 - **The stage re-measures in two cases:** on `useFontsVersion()`, and once `loadMapFonts` has resolved for every island. A face can finish loading before the `loadingdone` listener is attached.
   - The fonts are loaded again only when an island's label face or label text changes, not on every edit, so dragging a slider doesn't reload fonts.
 - **Switchers:** the island switcher is the prototype's segmented control (a white active pill). The map tabs use the spec's active tab, `#0D6F82` with white text.
-- **Hover:** controls grow over 300 ms, inside the spec's 1.03–1.1: 1.04 by default, 1.1 for the small row buttons (the dot, the side arrows, ×), 1.03 for the wide icon and menu buttons. One rule applies the scale each control sets, so there is no motion at all under `prefers-reduced-motion`.
+- **Hover:** controls grow over 300 ms, inside the spec's 1.03–1.1: 1.04 by default, 1.1 for the small row buttons (the dot, the side arrows, ×, "⌖ Place on map"), 1.03 for the wide icon and menu buttons and the map thumbnails. One rule applies the scale each control sets, so there is no motion at all under `prefers-reduced-motion`.
 
 ## Editing
 
@@ -96,7 +96,7 @@ Where the app deliberately differs from the handoff prototype (`design_handoff_i
   - a new icon is named after its icon (`sun-2`);
   - a new route after its hostels, without `-nest` (`aguere-puerto`).
   Renaming a row or cycling a route's ends never changes its id: ids are identity and, prefixed by the layout, Figma's layer names.
-- **New points** sit at the artboard centre, unprojected (spec §2), rounded to 5 decimals: about a metre, where a pixel is well over 100 m. The defaults are the prototype's:
+- **New points** sit at the artboard centre, or where the map was clicked (see "Direct manipulation"), unprojected (spec §2) and rounded to 5 decimals: about a metre, where a pixel is well over 100 m. One function, `latLngAt`, turns every artboard point into lat/lng, kept half a pixel inside the artboard so the rounding can never push it off. The defaults are the prototype's:
   - a spot is `New spot` with the star icon, label below;
   - an icon is `sun`, 40 px, on both maps;
   - a route joins the first two visible hostels, bend 0.2, on the Hostels map.
@@ -117,6 +117,51 @@ Where the app deliberately differs from the handoff prototype (`design_handoff_i
 - **Each row is a named group** (the label, the icon's name, or "From → To"), so a screen reader says which row a Visible, side or × button belongs to.
 - **Import JSON replaces the selected island,** through `parseDataFile`. Another island's file, a projection mismatch or a schema error is refused as "Import failed: `<reason>`", and a file that isn't JSON as "Import failed: that file is not JSON". Success reads "`<Island>` imported".
 - **Reset island confirms inline** (decision 12): "Reset `<Island>` to the published map? Edits to both maps are lost.", with Reset and Cancel, then "`<Island>` back to defaults". The prototype reset at once. Cancel takes the focus, and after either answer it returns to "Reset island". Settings reset too, since they belong to the island file.
+
+## Direct manipulation
+
+M5: dragging on the map, placing points with a click, and choosing a map by its thumbnail (spec §2 "Interactions").
+
+- **Only the large map is edited on.** It takes the drags and, while placing, the click. The thumbnails are buttons that put their map on the stage. In the prototype all six maps were live.
+- **A press becomes a drag only once it has moved 3 screen pixels** (the plan's threshold; the prototype had none). A shorter press is a click and changes nothing: no nudge, and no tab switch.
+- **The pressed label or icon captures the pointer,** so the drag follows it off the map and keeps its grab or move cursor. The moves and the release are heard on the window, and one `AbortController` removes those listeners, so a lost capture or a release outside the window can't leave a drag running; a move with the button up also ends it. The prototype used window listeners without capture.
+- **Screen pixels become artboard pixels** by `1080 / width of the map's <svg>`, measured at the press. The width is the `<svg>`'s own, not its frame's, which has a 1 px border.
+- **Every move is an edit,** through the same path as the rows: held to the schema, shown in the list, and saved by the debounced autosave, which is flushed on `pagehide`, so a drag followed at once by a reload is kept. The spec saves on pointer-up. A move whose rounded result equals the last one sent is skipped.
+- **Label drag** sets `dx`/`dy` in whole pixels and keeps the side.
+  - The nudge is clamped to the range that keeps the pill inside `LABEL_BOX`, so the stored nudge is the one drawn. The prototype let it grow past the edge while the label stayed pinned there.
+  - The layout gives each label that range (`LabelShape.nudge`, whole pixels, rounded inwards). It reaches `IslandMap`'s pointer-down callback, never the markup, so the export is unchanged.
+  - The range stretches to take in the starting nudge, so a label the clamp already holds (its anchor past the edge) never snaps, or gains a leader, on the first move.
+  - A pill wider than the box (a long label at a large size) is pinned by the clamp whatever its nudge, so a drag keeps its nudge on that axis.
+- **Decor drag** moves the icon's centre by the drag from where it started, kept half a pixel inside the artboard, then unprojected and rounded to 5 decimals in the edit (`placeAt`).
+  - It switches the panel to the island's Decor tab once the press becomes a drag. The prototype switched on pointer-down, so a plain click did too.
+  - The stage keeps the map it had.
+- **No `_suppress` flag.** A drag can't count as a click, by construction:
+  - while placing is armed, the large map gets no `interaction`: no drags, hit rects or grab cursors;
+  - otherwise the large map has no click action;
+  - Chromium fires the click on the common ancestor of the press and the release, so a drag released over a thumbnail never selects it.
+- **Placing** (spec §2 "Adding points"):
+  - "⌖ Click map to place" sits beside "+ Add row" (Things to do), "+ Add icon" (Decor) and "+ Add hostel" (Hostels). It reads "Cancel placing" while armed, filled with the accent, as in the prototype.
+  - Armed, the large map shows a crosshair and the prototype's dark pill, both on its HTML wrapper, never in the SVG: "Click the island to drop a new spot · Esc to cancel", "Click the map to drop a decor icon · Esc to cancel", "Click the island to drop `<Hostel>` · Esc to cancel", or "Click the island to move `<label>` · Esc to cancel".
+  - The next click on the large map places once, with the M4 statuses ("Added — rename it in the list", "Icon added — click it in the list to change the icon", "`<Hostel>` added") or "`<label>` moved".
+  - A press that moved 3 px or more places nothing, and placing stays armed. A click on a label places there too; the prototype swallowed it.
+  - Any click on the artboard counts, sea included, as in the prototype: the banner's "island" is advice.
+  - Esc, the same button, or another tab or island cancels. Esc is heard on the document, like the popovers', so one press also closes an open list.
+  - So does its target going away: the row it would move is removed, or the hostel it would drop comes back through "+ Add hostel". The banner never waits for a click the edit would refuse.
+  - Armed, the Hostels button cancels instead of opening its list, so it drops `aria-expanded`.
+  - Placing leaves the focus alone: the user is on the map, and in the stacked layout focusing the new row would scroll the page away. "+ Add row" still focuses the new name.
+  - What each placement does, and its banner and status words, live in one table (`src/editor/placing.ts`), which the add buttons share.
+- **Hostel placing: both kinds (the owner's answer, 2026-09-28).**
+  - The Hostels tab's "⌖ Click map to place" opens the same list as "+ Add hostel": the island's real hostels that are not on the map (decision 3). Picking one arms placing, and the click drops it with its seed label and label placement (side and nudge, like every other way of moving a point: El Médano's stacked labels stay stacked when their pin is corrected). The button is disabled while every hostel is on the map, which is the case today.
+  - Every point row has "⌖ Place on map" under its "Lat, lng": the next click moves that row's point there. Things to do rows have it too, since the row is shared and a spot can't be dragged.
+  - Either way the click becomes lat/lng once, to 5 decimals, and the data holds only lat/lng, so pins still come from lat/lng (README ground rules). A hostel placed or moved this way is unverified, since a click only approximates the pin (decision 13), and its "Lat, lng" text follows.
+- **Thumbnails** (spec §2 "Clicking a map that isn't selected"):
+  - They are native buttons named by their caption ("Gran Canaria · Things to do"). The map inside is hidden from assistive technology, or its every label would join the name.
+  - On a map tab, a click selects that island and map, and the tab follows.
+  - On the Decor tab, a click selects the island and puts that map on the stage, and the tab stays Decor (the owner's answer, 2026-09-28). The spec says "only the island", but in the prototype all six maps were live; here only the large map can be dragged on, so this is how an icon shown only on Things to do reaches the stage.
+  - From the keyboard, focus moves to the large map, since the pressed thumbnail leaves the list. A mouse click moves no focus.
+  - Thumbnails still work while placing; another tab or island cancels it.
+- **Touch isn't a drag.** A touch scrolls the page, and its `pointercancel` ends the drag. The tool is used at a desk.
+- **Keyboard:** labels and icons have no keyboard drag, and there is no keyboard placing. Points move through "Lat, lng" and the side buttons; "+ Add row" and "+ Add icon" add from the keyboard.
 
 ## Autosave
 
