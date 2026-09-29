@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { LAYER_LABELS } from '../shared/ids';
-import { ISLANDS } from '../shared/islands';
+import type { Point } from '../shared/geo';
+import { ISLANDS, mapName } from '../shared/islands';
 import { ISLAND_IDS, type IslandData, type IslandId, type Layer } from '../shared/schema';
 import { AttractionRows } from './AttractionRows';
 import { createDraftStore, type Bases, type DraftProblem, type DraftStore } from './autosave';
@@ -12,18 +12,24 @@ import { Header, type Tab } from './Header';
 import { HostelRows } from './HostelRows';
 import { IslandActions } from './IslandActions';
 import { MapStage } from './MapStage';
+import { placementPlan } from './placing';
 import { usePreviewBackground } from './prefs';
 import type { OnEdit, RowsProps } from './RowControls';
 import { RouteRows } from './RouteRows';
 import { SettingsPanel } from './SettingsPanel';
 import { applyEdit, importFile, resetIsland, setSettings, tryEdit, type EditResult, type IslandEdit } from './state';
 import { StatusLine, useStatus } from './StatusLine';
+import { useDrag } from './useDrag';
+import { usePlacing } from './usePlacing';
 import type { Workspace } from './workspace';
 
 /* The editor shell (spec §2): header, the draft notices, the map stage and
    the side panel with the rows, settings, exports and the island file. The
    three islands' data is one Workspace, changed only by the pure edits of
-   state.ts through functional updates, and autosaved to this browser. */
+   state.ts through functional updates, and autosaved to this browser. The
+   large map is edited directly too: drags (useDrag) and, once armed from a
+   list, a click that places a point (usePlacing). Both go through the same
+   edits as the rows. */
 
 type AppState = {
   workspace: Workspace;
@@ -139,14 +145,40 @@ export function App() {
 
   const selectTab = (t: Tab) => setState((s) => ({ ...s, tab: t, layer: t === 'decor' ? s.layer : t }));
 
-  const rows: RowsProps = { data, island: entry, onEdit: edit };
+  /* A thumbnail puts its island and map on the stage (spec §2). On the Decor
+     tab the tab stays, as the spec says, but the map changes too: only the
+     large map can be dragged on, so this is how a Things-to-do-only icon
+     gets there (the owner's choice, 2026-09-28). */
+  const selectMap = (id: IslandId, l: Layer) => setState((s) => ({ ...s, island: id, layer: l, tab: s.tab === 'decor' ? s.tab : l }));
+
+  const placing = usePlacing(tab, island, data);
+  const plan = placing.armed && placementPlan(placing.armed);
+  // One click places once; a refusal shows in the status line like any edit's.
+  const place = (at: Point) => {
+    if (!plan) return;
+    edit(plan.edit(at), plan.done);
+    placing.cancel();
+  };
+  // A dragged decor icon brings its list up: the island's Decor tab (spec §2).
+  const drag = useDrag({ data, projection: entry.geometry.projection, onEdit: edit, onDecorDrag: () => selectTab('decor') });
+
+  const rows: RowsProps = { data, island: entry, onEdit: edit, placing };
 
   return (
     <div className="app">
       <Header island={island} tab={tab} data={data} onIsland={(id) => setState((s) => ({ ...s, island: id }))} onTab={selectTab} />
       <DraftNotice stale={store.stale(bases)} problems={state.problems} onLoadPublished={loadPublished} onKeepDraft={keepDraft} onDismiss={dismiss} />
       <div className="workspace">
-        <MapStage workspace={workspace} island={island} layer={layer} tab={tab} background={background} />
+        <MapStage
+          workspace={workspace}
+          island={island}
+          layer={layer}
+          tab={tab}
+          background={background}
+          interaction={plan ? undefined : drag}
+          placing={plan ? { banner: plan.banner, onPlace: place } : undefined}
+          onSelect={selectMap}
+        />
         <aside className="panel" aria-label="Map data">
           <div className="panel-scroll">
             <div className="panel-intro">
@@ -156,7 +188,10 @@ export function App() {
               <h2 id={PANEL_HEADING_ID} className="panel-heading" tabIndex={-1}>
                 Map data
               </h2>
-              <p className="lede">Paste coordinates straight from Google Maps (right-click a place → copy the numbers). Pins land in the right spot automatically.</p>
+              <p className="lede">
+                Paste coordinates straight from Google Maps (right-click a place → copy the numbers). Pins land in the right spot automatically; drag a label
+                to move it. Click any map to edit it here.
+              </p>
             </div>
 
             {/* Keyed by tab, island and revision: rows hold raw text, ids repeat across islands (every island has a
@@ -179,7 +214,7 @@ export function App() {
               background={background}
               onBackground={setBackground}
             />
-            <ExportBar ctx={{ island, layer, data, geometry: entry.geometry }} mapName={`${entry.name} · ${LAYER_LABELS[layer]}`} onStatus={showStatus} />
+            <ExportBar ctx={{ island, layer, data, geometry: entry.geometry }} mapName={mapName(island, layer)} onStatus={showStatus} />
             {/* Keyed by island, so a half-answered reset never carries over to another island. */}
             <IslandActions key={`actions:${island}`} islandName={entry.name} onImport={importJson} onReset={reset} onStatus={showStatus} />
           </div>

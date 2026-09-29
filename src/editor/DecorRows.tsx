@@ -1,20 +1,23 @@
 import { ICONS } from '../shared/icons';
 import { DECOR_SIZE } from '../shared/tokens';
 import { IconPicker } from './IconPicker';
-import { RemoveButton, RowsHead, ShowOnButton, VisibilityToggle, type RowsProps } from './RowControls';
+import { ADDED_ICON } from './placing';
+import { PlaceButton, RemoveButton, RowsHead, ShowOnButton, VisibilityToggle, type RowsProps } from './RowControls';
 import { addDecor, cycleShowOn, remove, setDecorSize, setIcon, setVisible } from './state';
 
 /* The Decor tab's icon rows (spec §2): toggle, icon, size 20–140, Show on, ×.
-   Decor is shared by an island's two maps; Show on says which. Dragging an
-   icon on the map is M5. */
+   Decor is shared by an island's two maps; Show on says which. An icon moves
+   by dragging it on the large map (useDrag), and "⌖ Click map to place" drops
+   a new one where the map is clicked. */
 
 /** The prototype's slider step. */
 const SIZE_STEP = 2;
 
-export function DecorRows({ data, onEdit }: RowsProps) {
+export function DecorRows({ data, onEdit, placing }: RowsProps) {
+  const armed = placing.armed?.kind === 'icon';
   return (
     <section className="rows-section" aria-label="Decor icons">
-      <p className="caption rows-caption">Icons on the sea turn white automatically.</p>
+      <p className="caption rows-caption">Drag icons on the map to move them. Icons on the sea turn white automatically.</p>
       <RowsHead columns={['', 'Icon', 'Size', 'Show on', '']} decor />
       <div className="rows">
         {data.decor.map((d) => (
@@ -40,9 +43,10 @@ export function DecorRows({ data, onEdit }: RowsProps) {
         ))}
       </div>
       <div className="rows-foot">
-        <button type="button" className="btn btn-outline" onClick={() => onEdit(addDecor(), 'Icon added — click it in the list to change the icon')}>
+        <button type="button" className="btn btn-outline" onClick={() => onEdit(addDecor(), ADDED_ICON)}>
           + Add icon
         </button>
+        <PlaceButton armed={armed} onClick={() => (armed ? placing.cancel() : placing.arm({ kind: 'icon' }))} />
       </div>
     </section>
   );

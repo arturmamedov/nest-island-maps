@@ -1,8 +1,11 @@
+import type { ComponentProps } from 'react';
 import { SHOW_ON_LABELS } from '../shared/ids';
 import type { IslandEntry } from '../shared/islands';
 import { parseLabel, SIDES, type IslandData, type IslandId, type ShowOn, type Side } from '../shared/schema';
 import { focusAfterRemoving } from './focus';
+import { CANCEL_PLACING, PLACE } from './placing';
 import type { EditResult, IslandEdit } from './state';
+import type { Placing } from './usePlacing';
 import { useRawText } from './useRawText';
 
 /* The controls every data row shares (spec §2 "Interactions", the prototype's
@@ -14,7 +17,7 @@ import { useRawText } from './useRawText';
 export type OnEdit = (edit: IslandEdit, done?: string) => EditResult;
 
 /** What every list of rows gets from the App. The App remounts the lists when the island is reset or replaced. */
-export type RowsProps = { data: IslandData; island: IslandEntry; onEdit: OnEdit };
+export type RowsProps = { data: IslandData; island: IslandEntry; onEdit: OnEdit; placing: Placing };
 
 /** The 18 px dot: filled when the row is on the map. */
 export function VisibilityToggle({ visible, onChange }: { visible: boolean; onChange: (visible: boolean) => void }) {
@@ -93,6 +96,15 @@ export function LabelInput({ value, island, onCommit, fresh }: LabelInputProps) 
         if (r.ok && r.label !== value) onCommit(next);
       }}
     />
+  );
+}
+
+/** "⌖ Click map to place" beside a list's add button (the prototype's); it reads "Cancel placing" while armed. */
+export function PlaceButton({ armed, className, ...props }: ComponentProps<'button'> & { armed: boolean }) {
+  return (
+    <button type="button" className={['btn btn-outline', armed && 'btn-armed', className].filter(Boolean).join(' ')} {...props}>
+      {armed ? CANCEL_PLACING : PLACE}
+    </button>
   );
 }
 

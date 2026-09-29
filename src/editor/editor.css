@@ -177,6 +177,7 @@ button:focus-visible {
 }
 
 .map-frame {
+  position: relative;
   border: 1px solid var(--border);
   border-radius: 10px;
   line-height: 0;
@@ -192,18 +193,75 @@ button:focus-visible {
   display: block;
   width: 100%;
   height: auto;
+  /* Dragging a label must not select its text. */
+  user-select: none;
 }
 
-.map-card figcaption {
+/* Placing (spec §2): the crosshair and the prototype's dark pill, on the wrapper. */
+.map-frame.placing {
+  cursor: crosshair;
+}
+
+.placing-banner {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  border-radius: 9999px;
+  padding: 8px 14px;
+  background: var(--deep);
+  color: #fff;
+  font: 600 12.5px/1.2 Montserrat, sans-serif;
+  text-align: center;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.2);
+  /* One line where it fits, as in the prototype; on a phone-sized map it wraps inside the map instead. */
+  width: max-content;
+  max-width: calc(100% - 24px);
+  /* The click goes through to the map underneath. */
+  pointer-events: none;
+}
+
+.map-caption {
+  display: block;
   margin-top: 8px;
   font-size: 12.5px;
   font-weight: 600;
   color: var(--text-2);
 }
 
-.map-card-large figcaption {
+.map-card-large .map-caption {
   margin-top: 12px;
   font-size: 13px;
+}
+
+/* Focus lands here when a thumbnail is chosen from the keyboard. */
+.map-card-large:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 8px;
+  border-radius: 12px;
+}
+
+/* The other five maps: each a button that puts its map on the stage. */
+.map-thumb {
+  --hover-scale: 1.03;
+  display: block;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: none;
+  text-align: left;
+}
+
+.map-thumb .map-frame {
+  display: block;
+}
+
+/* Primary, not the accent: the accent outline means "selected". */
+.map-thumb:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 6px;
+  border-radius: 10px;
 }
 
 .thumbs {
@@ -214,7 +272,7 @@ button:focus-visible {
   margin: 32px auto 0;
 }
 
-.thumbs figcaption {
+.thumbs .map-caption {
   font-size: 11.5px;
   color: var(--muted);
 }
@@ -443,6 +501,36 @@ button:focus-visible {
   font: 500 12px/1.2 ui-monospace, Menlo, monospace;
 }
 
+/* "Lat, lng" with "⌖ Place on map" under it, as the name has its badges or icon. */
+.row-coords {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.place-point {
+  --hover-scale: 1.1;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: #fff;
+  color: var(--primary);
+  font: 600 10.5px/1.3 Montserrat, sans-serif;
+  white-space: nowrap;
+}
+
+.place-point:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.place-point.armed {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--deep);
+}
+
 .sides {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -604,6 +692,8 @@ button.badge:hover:not(:disabled) {
 
 .add-hostel {
   flex: 1;
+  /* The button fills the picker's height, so the two Hostels buttons match when one wraps. */
+  display: flex;
 }
 
 .add-hostel > .btn {
@@ -830,6 +920,12 @@ button.badge:hover:not(:disabled) {
   border: 2px solid var(--accent);
   background: #fff;
   color: var(--primary);
+}
+
+/* "Cancel placing": the place button while armed, as in the prototype. */
+.btn-outline.btn-armed {
+  background: var(--accent);
+  color: var(--deep);
 }
 
 .btn-quiet {
