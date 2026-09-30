@@ -181,3 +181,49 @@ M5: dragging on the map, placing points with a click, and choosing a map by its 
   - Reset, Import and Load published count as built on the current seed.
 - **Storage that fails never breaks the editor:** every access is guarded. A failed save shows "Couldn’t save in this browser — download the JSON to keep your changes" once, until a save succeeds again.
 - **Raw text and resets:** the label and coordinates text lives in row state. Rows are keyed by an island revision that goes up on reset, import and Load published, so text the data never took (an empty, red label) is cleared even when the reset leaves the data as it was.
+
+## Geometry
+
+M6: `npm run geometry` rebuilds each island's coast and four halo rings from the raw OpenStreetMap coastlines (spec §5) in pure TypeScript, with no canvas (plan decision 10). The committed `data/geometry` files stay the source of truth; the script only matters when an island is added.
+
+- **Three modes, and a check never writes the data.**
+  - `npm run geometry` builds all three islands into `test-results/geometry/`: each `.geo.json` in the committed shape, and an overlay SVG.
+  - `-- --check` does the same, then compares with `data/geometry/`. It prints each path's distance and where it occurs, and exits 1 on a failure.
+  - `-- --write <island>…` replaces the named islands' files in `data/geometry/`, only when the owner asks. It must name them, so adding an island never rewrites the ones that exist, and it writes only once every island has built. With `--check` it is refused, as is any argument it doesn't expect.
+  - The first line printed names the mode: npm can drop the `--` before a flag, and a check that ran as a plain build would look like a pass.
+- **`fitProjection` is reused, so there is no `scripts/geometry/fit.ts`.** `src/shared/geo.ts` already mirrors the reference's fit operation for operation, and reproduces the three committed projections bit for bit. `tests/unit/geo.test.ts` now takes the boxes from `scripts/geometry/config.ts`, their one home.
+- **Modules:** `config`, `raster`, `blur`, `contour`, `edt`, `simplify` and `path` as planned, plus `compare` (the Hausdorff check), `island` (the pipeline and the file shape) and `overlay`. `contour` returns grid coordinates, and the pipeline maps them to the artboard before simplifying; the reference did both in one function.
+- **The grid and its half-cell shift are the reference's:** artboard −300…1380 at 1.25 cells per pixel (2100 × 2100). Cells are centred on i + ½, as canvas pixels are, while marching squares reads sample i as coordinate i. So every traced path sits about 0.4 px up and left of its raw coast. The committed files carry that shift, and the port keeps it on purpose; without it, it would start 0.57 px away from them.
+- **The coast fill** uses the nonzero rule, with 16 sub-scanlines per cell row and exact horizontal coverage. The factor barely matters: 16 and 64 give the same paths to 0.001 px, and 4 moves one ring by 0.06 px.
+- **The blur can't be the reference's.** It was `ctx.filter = 'blur(σpx)'`, which each browser approximates its own way, stored as 8-bit alpha. This is the Gaussian that filter stands for:
+  - σ in grid cells (2.2; Ibiza 4.2);
+  - truncated at ⌈3σ⌉ and normalised;
+  - applied along rows, then columns, with zeros outside the grid;
+  - on a float field.
+- **The thresholds:** the coast is the 0.5 contour (the reference's 127.5 of 255), and land is coverage above 127/255 (its alpha > 127).
+- **Marching squares, the distance transform and Douglas–Peucker are ported operation for operation,** ties included:
+  - a corner exactly on the level counts as inside (`>=`), the saddles are fixed, keys are rounded to 1/1000 and walked forward in insertion order, and only the longest line is kept;
+  - `<=` at a ring's reach, which ring 2 hits exactly (110 cells);
+  - DP measures to the infinite line and keeps a point only strictly beyond the tolerance, and a ring is split at the point farthest from its start.
+- **Direction and start come from the walk.** Every path, committed and rebuilt, runs clockwise on screen from its topmost row. Rings 1 and 3 trace at exact ties (10 and 60 cells) and start on tie vertices, where the reference's walk can turn counter-clockwise (`tests/unit/geometry/contour.test.ts` pins that on a disc). On these three islands none does. It is kept, not "fixed".
+- **The check:**
+  - Each rebuilt path is held to its committed one by the symmetric Hausdorff distance. It samples every 0.1 px against the other path's segments, so it can read up to 0.05 px low.
+  - Everything that isn't a path must be byte-equal. So the projection, which the seeds copy, can't drift, and neither can the name, source and note, which `config.ts` copies from the committed files as generator inputs.
+  - The tolerance is the plan's 1.5 px, since every island measures under it:
+
+  | px | coast | ring-1 | ring-2 | ring-3 | ring-4 |
+  |---|---|---|---|---|---|
+  | Tenerife | 0.41 | 0.85 | 0.66 | 0.80 | 0.84 |
+  | Gran Canaria | 0.37 | 0.80 | 0.76 | 0.74 | 0.29 |
+  | Ibiza | 0.49 | 1.16 | 1.15 | 1.15 | 0.82 |
+
+  - The coast lies closest. A ring inherits the one-cell (0.8 px) steps of the land mask it grows from.
+  - Ibiza, blurred at 4.2, differs most: its ring-1 runs about 1 px outside the committed one along the south coast.
+  - Before the port, the raw coast lay 12–15 px from the committed one.
+- **Two speed-ups leave the output byte-identical:** the blur computes only the box that holds coverage (every other sum is a sum of zeros), and the Hausdorff scan stops for a sample already within the worst distance found. A build takes about 2 s per island, so `npm test` rebuilds Tenerife and checks it too.
+- **The overlay is an SVG,** not a PNG, so it needs no rasteriser and zooms cleanly:
+  - the rebuilt coast (red) and rings (blue), over the original website map at half opacity (the PNG embedded);
+  - for Ibiza, which never had a map, over the committed paths in grey.
+
+  The reference also plotted test points; the editor's "In the sea" badge does that job now.
+- **The output is exactly the committed shape,** validated by `GeometrySchema`: `JSON.stringify`, one line, no trailing newline, keys `island, name, artboard, source, projection{type, s, lamC, mC, cx, cy, note}, rings[{id, offsetPx, d}]`. The design tool saved `{proj, island, rings}`, which was wrapped by hand; that step is gone.

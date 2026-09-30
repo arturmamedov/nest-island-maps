@@ -1,6 +1,6 @@
 # Nest Island Maps — v1 implementation plan
 
-> **Status:** approved by the owner on 2026-09-27. M1 done on 2026-09-27 (branch `feat/v1`, commits `c10c8f2`…`3539c25`). M2 done on 2026-09-28 (commits `ec13684`…`8f8e48e`). M3 done on 2026-09-28 (commits `9f5755d`…`b8f74e2`). M4 done on 2026-09-28 (commits `402aba7`…`5e96c51`). M5 done on 2026-09-28 (commits `eed6009`…`5d231ba`). M6 is next.
+> **Status:** approved by the owner on 2026-09-27. M1 done on 2026-09-27 (branch `feat/v1`, commits `c10c8f2`…`3539c25`). M2 done on 2026-09-28 (commits `ec13684`…`8f8e48e`). M3 done on 2026-09-28 (commits `9f5755d`…`b8f74e2`). M4 done on 2026-09-28 (commits `402aba7`…`5e96c51`). M5 done on 2026-09-28 (commits `eed6009`…`5d231ba`). M6 done on 2026-09-29 (commits `5b2ea01`…`46046f6`), and with it v1 is complete.
 
 ## Context
 
@@ -209,8 +209,14 @@ Export comes before editing because font-embedded rasterising is the riskiest pi
   - Playwright `interaction.spec` covering each behaviour above.
 - **Verify:** same commands as M4.
 
-### M6 – Geometry pipeline
+### M6 – Geometry pipeline (done 2026-09-29)
 Independent of the other milestones; any time after M1.
+- **Done as planned,** with a few changes:
+  - `fitProjection` from `src/shared/geo.ts` is reused rather than a second fit in `fit.ts`. Three modules were added: `compare` (the Hausdorff check), `island` (the pipeline and the file shape) and `overlay`;
+  - the port reproduces the committed files closely: every path within 1.16 px (the coasts within 0.49), with the projection and the rest of each file byte-equal. The tolerance is the plan's 1.5 px;
+  - the overlays are SVGs, and `npm test` also rebuilds Tenerife and checks it (about 2 s);
+  - the v1 wrap-up: a manual pass in Chrome over all six maps, drag, place, import and export, with the exports compared with the reference PNGs, and the README's "Checks" and "Where things live" tables.
+  - Tests: 46 new unit tests (466 in all); the 46 render checks are unchanged. The decisions are in `docs/decisions.md` under "Geometry".
 - **Work:** `scripts/build-geometry.ts` plus pure modules in `scripts/geometry/`. The input is `design_handoff_island_maps/tools/raw-osm-coastlines.json`, which stays the single copy. The script writes to `test-results/geometry/`, and `--write` overwrites `data/geometry/`.
 - **Tests:**
   - EDT and marching squares on synthetic shapes.

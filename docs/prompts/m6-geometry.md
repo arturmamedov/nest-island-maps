@@ -1,6 +1,6 @@
 # M6: the geometry pipeline
 
-> **Status:** open. Written 2026-09-28, after M5.
+> **Status:** done, 2026-09-29. Written 2026-09-28, after M5.
 
 You are continuing **Nest Island Maps** in `A:\serverpath\laragon\nest-island-maps`, on branch `feat/v1`. It's an internal static site (Vite + React + TypeScript) that draws the Nests Hostels island maps (Tenerife, Gran Canaria, Ibiza) from data and exports them as SVG, PNG, JPG and JSON.
 
