@@ -4,25 +4,20 @@ import { describe, expect, it } from 'vitest';
 import { fitProjection, isOnLand, parsePolygons, pathPolygons, pointInPolygons, project, unproject } from '../../src/shared/geo.js';
 import { ISLAND_IDS, type IslandId } from '../../src/shared/schema.js';
 import { ISLANDS } from '../../src/shared/islands.js';
+import { ISLAND_CONFIG } from '../../scripts/geometry/config.js';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const raw = JSON.parse(
   readFileSync(join(ROOT, 'design_handoff_island_maps/tools/raw-osm-coastlines.json'), 'utf8'),
 ) as Record<IslandId, [number, number][]>;
 
-/* The boxes the handoff fitted each island into (README §5). */
-const BOXES: Record<IslandId, [number, number, number, number]> = {
-  tenerife: [200, 253, 843, 825],
-  gran_canaria: [295, 289, 771, 812],
-  ibiza: [230, 240, 850, 840],
-};
-
 describe('projection', () => {
   for (const id of ISLAND_IDS) {
     const p = ISLANDS[id].geometry.projection;
 
+    // The geometry pipeline's own boxes (scripts/geometry/config.ts), so the fit it runs is the one checked here.
     it(`${id}: the fit reproduces the committed constants exactly`, () => {
-      const fitted = fitProjection(raw[id], BOXES[id]);
+      const fitted = fitProjection(raw[id], ISLAND_CONFIG[id].box);
       expect(fitted).toEqual({ s: p.s, lamC: p.lamC, mC: p.mC, cx: p.cx, cy: p.cy });
     });
 
@@ -36,7 +31,7 @@ describe('projection', () => {
     });
 
     it(`${id}: the coastline lands inside its box`, () => {
-      const [x0, y0, x1, y1] = BOXES[id];
+      const [x0, y0, x1, y1] = ISLAND_CONFIG[id].box;
       for (const [lng, lat] of raw[id]) {
         const { x, y } = project(p, lat, lng);
         expect(x).toBeGreaterThanOrEqual(x0 - 1e-6);
