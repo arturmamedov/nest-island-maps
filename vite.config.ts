@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   appType: 'mpa',
   // Relative asset URLs in the build, so one static build runs at a domain
-  // root or in a subfolder (e.g. nestpass.ai/maps/). Dev keeps '/'.
+  // root or in a subfolder (it lives at nestpass.ai/nestmaps/). Dev keeps '/'.
   base: './',
   build: {
     outDir: 'dist',

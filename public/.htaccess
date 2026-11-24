@@ -1,0 +1,44 @@
+# Nest Island Maps: Apache rules for the app folder (https://nestpass.ai/nestmaps/,
+# or any other folder: every rule here is relative). Vite copies this file into
+# dist/, and every upload of dist/ replaces it (docs/deploy.md).
+#
+# Only lines the IONOS host accepts in .htaccess: headers, rewrites and
+# FilesMatch. It answers every page with a 403 when this file holds an Options,
+# php_flag or <If> line (nest-flyers, docs/reports/host-facts.md).
+#
+# The tool is public for now, an MVP demo (the owner's choice, 2026-11-24). For
+# the staff password later, paste the flyers block
+# (nest-flyers, php/web/access-examples/htaccess-basic-auth.txt) at the TOP of
+# this file, again after each upload.
+
+# An internal tool: never indexed. robots.txt counts only at a domain's root
+# (nestpass.ai's asks every crawler to stay out), so every answer says it too.
+<IfModule mod_headers.c>
+    Header set X-Robots-Tag "noindex, nofollow"
+</IfModule>
+
+# Caching. Vite names every asset after its content (main-DkizXxFL.js), so a new
+# build brings new names and an asset can be kept for a year. The pages keep
+# their names, so the browser re-checks them on every visit, a cheap 304 when
+# nothing changed: after an upload everyone gets the new index.html at once.
+<IfModule mod_headers.c>
+    <FilesMatch "\.html$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+    <FilesMatch "-[A-Za-z0-9_-]{8}\.(js|css|woff2?)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # http:// goes to https:// (the domain doesn't redirect this folder itself).
+    # X-Forwarded-Proto covers TLS ending at a proxy in front of Apache. The
+    # path comes from the request line as sent, not REQUEST_URI, which IONOS's
+    # MultiViews may already have rewritten.
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteCond %{THE_REQUEST} ^\S+\s+(?:https?://[^/\s]+)?(/\S*)
+    RewriteRule ^ https://%{HTTP_HOST}%1 [R=301,L,NE]
+</IfModule>

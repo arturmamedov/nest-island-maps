@@ -35,3 +35,18 @@ test('the editor loads no react-dom/server until an export runs', () => {
   expect(lazy).toHaveLength(1);
   expect(upFront).not.toContain(lazy[0]);
 });
+
+/* The build ships the Apache rules (Vite copies public/.htaccess), and their
+   year-long cache rule reaches every asset and neither page. The pattern is
+   read from the file itself, so a new asset kind can't silently fall back to
+   the host's default caching. */
+test('the build ships .htaccess, whose year-long cache rule covers every asset and no page', () => {
+  const htaccess = read('.htaccess');
+  const pattern = /<FilesMatch "([^"]+)">\s*Header set Cache-Control "public, max-age=31536000, immutable"/.exec(htaccess)?.[1];
+  expect(pattern, 'the immutable FilesMatch in dist/.htaccess').toBeDefined();
+  const hashed = new RegExp(pattern!);
+  const assets = readdirSync(join(DIST, 'assets'));
+  expect(assets.length).toBeGreaterThan(0);
+  for (const file of assets) expect(file, `assets/${file}`).toMatch(hashed);
+  for (const page of ['index.html', 'render.html']) expect(page).not.toMatch(hashed);
+});
