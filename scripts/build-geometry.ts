@@ -34,28 +34,31 @@ const RawCoastlinesSchema = z.record(IslandIdSchema, z.array(z.tuple([z.number()
 
 const vertices = (d: string) => d.split('L').length;
 
-function readCommitted(id: IslandId): Geometry | null {
+/* A committed file's text (the check compares its bytes) and its validated contents, or null for a new island. */
+function readCommitted(id: IslandId): { text: string; geometry: Geometry } | null {
   const file = committedPath(id);
-  return existsSync(file) ? GeometrySchema.parse(JSON.parse(readFileSync(file, 'utf8'))) : null;
+  if (!existsSync(file)) return null;
+  const text = readFileSync(file, 'utf8');
+  return { text, geometry: GeometrySchema.parse(JSON.parse(text)) };
 }
 
 /* The original website map where there is one (Tenerife, Gran Canaria), else the committed paths (Ibiza). */
-function overlayUnder(id: IslandId, committed: Geometry | null): OverlayUnder {
+function overlayUnder(id: IslandId, committed: Geometry | undefined): OverlayUnder {
   const png = referencePng(id);
   if (existsSync(png)) return { image: `data:image/png;base64,${readFileSync(png).toString('base64')}` };
   return { paths: committed ? [committed.island, ...committed.rings.map((r) => r.d)] : [] };
 }
 
 /** Prints one island's distances; returns how many checks failed. */
-function check(built: Geometry, committed: Geometry | null): number {
-  if (!committed) {
+function check(built: Geometry, committedText: string | undefined): number {
+  if (committedText === undefined) {
     console.error('  FAIL: there is no committed file to check against');
     return 1;
   }
-  const { sameOtherwise, paths } = compareGeometry(built, committed);
+  const { sameOtherwise, paths } = compareGeometry(built, committedText);
   let failures = 0;
   if (!sameOtherwise) {
-    console.error('  FAIL: the projection, name, source or ring offsets differ from the committed file');
+    console.error('  FAIL: apart from its paths, the file differs from the committed one (projection, name, source, ring offsets or key order)');
     failures++;
   }
   for (const { path, distance, at } of paths) {
@@ -69,8 +72,16 @@ function check(built: Geometry, committed: Geometry | null): number {
 /** What a run does: build (the default), check against data/geometry, or write the named islands over their committed files. */
 export type Run = { mode: 'build' } | { mode: 'check' } | { mode: 'write'; islands: IslandId[] } | { error: string };
 
-/** Reads the command line after the script name. Anything unexpected is refused rather than guessed at. */
-export function parseArgs(argv: readonly string[]): Run {
+/**
+ * Reads the command line after the script name. Anything unexpected is
+ * refused rather than guessed at, including a flag npm kept for itself:
+ * `npm run geometry --check` (no `--`) hands the script nothing and sets
+ * npm_config_check instead, and would otherwise pass as a plain build.
+ */
+export function parseArgs(argv: readonly string[], env: Record<string, string | undefined> = process.env): Run {
+  for (const flag of ['check', 'write'] as const) {
+    if (env[`npm_config_${flag}`] !== undefined) return { error: `npm took --${flag} as its own option. Run: npm run geometry -- --${flag}` };
+  }
   let checking = false;
   let writing = false;
   const islands: IslandId[] = [];
@@ -114,9 +125,9 @@ function main() {
     const committed = readCommitted(id);
     builds.set(id, built);
     writeFileSync(join(ROOT, OUT, `${id}.geo.json`), serializeGeometry(built));
-    writeFileSync(join(ROOT, OUT, `${id}-overlay.svg`), overlaySvg({ coast: built.island, rings: built.rings.map((r) => r.d), under: overlayUnder(id, committed) }));
+    writeFileSync(join(ROOT, OUT, `${id}-overlay.svg`), overlaySvg({ coast: built.island, rings: built.rings.map((r) => r.d), under: overlayUnder(id, committed?.geometry) }));
     console.log(`${id}: coast ${vertices(built.island)} vertices, rings ${built.rings.map((r) => vertices(r.d)).join(' / ')} (${seconds} s)`);
-    if (run.mode === 'check') failures += check(built, committed);
+    if (run.mode === 'check') failures += check(built, committed?.text);
   }
   console.log(`wrote ${OUT}/: <island>.geo.json and <island>-overlay.svg`);
 

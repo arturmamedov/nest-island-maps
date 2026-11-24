@@ -45,8 +45,9 @@ export const COAST_LEVEL = 0.5;
 /** A cell is land when its blurred coverage exceeds this (the reference's alpha > 127). */
 export const LAND_ABOVE = 127 / 255;
 
-/** Douglas–Peucker tolerances, in artboard pixels. */
+/** The coast's Douglas–Peucker tolerance, in artboard pixels. */
 export const COAST_SIMPLIFY = 0.35;
+/** The rings' Douglas–Peucker tolerance, in artboard pixels. */
 export const RING_SIMPLIFY = 0.4;
 
 /**
@@ -61,8 +62,9 @@ export const RINGS = [
   { offset: 160, closing: 75 },
 ] as const;
 
-/** Written into every geometry file, as the committed files have them. */
+/** The data source written into every geometry file, as the committed files have it. */
 export const SOURCE = 'OpenStreetMap contributors (ODbL), via Nominatim';
+/** The projection formula written beside the constants in every geometry file, as the committed files have it. */
 export const PROJECTION_NOTE = 'x = cx + (lngRad - lamC) * s ; y = cy - (ln(tan(pi/4 + latRad/2)) - mC) * s';
 
 /** The Hausdorff check samples each path every this many artboard pixels. */

@@ -67,12 +67,22 @@ function onePolygon(d: string): Polygon {
   return polygons[0]!;
 }
 
-/** The coast and each ring of `built` measured against `committed`, and whether the rest of the two files is byte-equal. */
-export function compareGeometry(built: Geometry, committed: Geometry): { sameOtherwise: boolean; paths: (Distance & { path: string })[] } {
-  const withoutPaths = (g: Geometry) => JSON.stringify({ ...g, island: '', rings: g.rings.map((r) => ({ ...r, d: '' })) });
+/* A geometry file as written, with its path data blanked. Read from the text
+   by JSON.parse alone, which keeps key order and any extra key (a schema
+   parse would normalise both away), so the comparison is of the bytes. */
+function withoutPaths(file: { island: unknown; rings: { d: unknown }[] }): string {
+  return JSON.stringify({ ...file, island: '', rings: file.rings.map((r) => ({ ...r, d: '' })) });
+}
+
+/**
+ * The coast and each ring of `built` measured against a committed file's
+ * text, and whether everything but the paths is byte-equal to that text.
+ */
+export function compareGeometry(built: Geometry, committedText: string): { sameOtherwise: boolean; paths: (Distance & { path: string })[] } {
+  const committed = JSON.parse(committedText) as { island: string; rings: { id: string; d: string }[] };
   const pairs = [
     { path: 'island', a: built.island, b: committed.island },
-    ...built.rings.map((r, k) => ({ path: r.id, a: r.d, b: committed.rings[k]!.d })),
+    ...built.rings.map((r, k) => ({ path: r.id, a: r.d, b: committed.rings[k]?.d ?? '' })),
   ];
   return {
     sameOtherwise: withoutPaths(built) === withoutPaths(committed),

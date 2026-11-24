@@ -1,19 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import type { Point } from '../../../src/shared/geo.js';
-import { ISLANDS } from '../../../src/shared/islands.js';
+import { GeometrySchema } from '../../../src/shared/schema.js';
 import { compareGeometry, hausdorff } from '../../../scripts/geometry/compare.js';
+import { committedText, square } from './helpers.js';
 
 /* How `npm run geometry -- --check` measures the port against the committed
    files: the symmetric Hausdorff distance between closed polygons (the
    farthest any point of either lies from the other), plus byte equality of
    everything that isn't a path. */
-
-const square = (x0: number, y0: number, x1: number, y1: number): Point[] => [
-  { x: x0, y: y0 },
-  { x: x1, y: y0 },
-  { x: x1, y: y1 },
-  { x: x0, y: y1 },
-];
 
 describe('hausdorff', () => {
   it('is zero for the same polygon', () => {
@@ -41,24 +34,33 @@ describe('hausdorff', () => {
   });
 });
 
-describe('compareGeometry', () => {
-  const tenerife = ISLANDS.tenerife.geometry;
+describe('compareGeometry (a build against a committed file’s text)', () => {
+  const text = committedText('tenerife');
+  const tenerife = GeometrySchema.parse(JSON.parse(text));
+  // Tiny paths keep the rest fast: only what isn't a path differs.
+  const small = structuredClone(tenerife);
+  small.island = 'M0.0 0.0L10.0 0.0L10.0 10.0Z';
+  for (const r of small.rings) r.d = small.island;
+  const smallText = JSON.stringify(small);
 
   it('finds a committed file identical to itself', () => {
-    const r = compareGeometry(tenerife, tenerife);
+    const r = compareGeometry(tenerife, text);
     expect(r.sameOtherwise).toBe(true);
     expect(r.paths.map((p) => p.path)).toEqual(['island', 'ring-1', 'ring-2', 'ring-3', 'ring-4']);
     for (const p of r.paths) expect(p.distance).toBeLessThan(1e-9);
   });
 
   it('notices a changed projection constant or name, even with the same paths', () => {
-    // Tiny paths keep this fast; only the rest of the file differs. (A 1e-12 change to `s` would round away.)
-    const small = structuredClone(tenerife);
-    small.island = 'M0.0 0.0L10.0 0.0L10.0 10.0Z';
-    for (const r of small.rings) r.d = small.island;
-    expect(compareGeometry(small, small).sameOtherwise).toBe(true);
+    // (A 1e-12 change to `s` would round away: its ULP is about 7e-12.)
+    expect(compareGeometry(small, smallText).sameOtherwise).toBe(true);
     const moved = { ...small, projection: { ...small.projection, cx: small.projection.cx + 0.5 } };
-    expect(compareGeometry(moved, small).sameOtherwise).toBe(false);
-    expect(compareGeometry({ ...small, name: 'Teneriffa' }, small).sameOtherwise).toBe(false);
+    expect(compareGeometry(moved, smallText).sameOtherwise).toBe(false);
+    expect(compareGeometry({ ...small, name: 'Teneriffa' }, smallText).sameOtherwise).toBe(false);
+  });
+
+  it('compares the committed bytes: a reordered key or an extra one is noticed', () => {
+    const { name, ...withoutName } = small;
+    expect(compareGeometry(small, JSON.stringify({ ...withoutName, name })).sameOtherwise).toBe(false);
+    expect(compareGeometry(small, JSON.stringify({ ...small, _note: 'edited by hand' })).sameOtherwise).toBe(false);
   });
 });

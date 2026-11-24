@@ -4,7 +4,7 @@ import { GeometrySchema, ISLAND_IDS, type Geometry } from '../../../src/shared/s
 import { compareGeometry } from '../../../scripts/geometry/compare.js';
 import { CHECK_TOLERANCE, G, ISLAND_CONFIG, artboardToGrid, gridToArtboard } from '../../../scripts/geometry/config.js';
 import { beyond, buildIsland, geometryFile, landMask, serializeGeometry } from '../../../scripts/geometry/island.js';
-import { committedText, rawCoastlines, shoelace } from './helpers.js';
+import { centroid, committedText, rawCoastlines, shoelace } from './helpers.js';
 
 /* The pipeline's own pieces: the grid, the two masks whose tie operators the
    rings depend on, and the file shape, which must reproduce the committed
@@ -57,15 +57,23 @@ describe('tenerife, built from the raw coastline', () => {
     built = buildIsland('tenerife', raw.tenerife);
   }, 30_000);
 
-  it('passes GeometrySchema and the committed path format', () => {
-    expect(GeometrySchema.safeParse(built).success).toBe(true);
+  // (buildIsland already validates with GeometrySchema; the committed format is stricter.)
+  it('writes every path in the committed format', () => {
     for (const d of [built.island, ...built.rings.map((r) => r.d)]) expect(d).toMatch(/^M\d+\.\d \d+\.\d(L\d+\.\d \d+\.\d)+Z$/);
   });
 
-  it(`lies within ${CHECK_TOLERANCE} px of the committed paths, with the rest of the file identical`, () => {
-    const { sameOtherwise, paths } = compareGeometry(built, GeometrySchema.parse(JSON.parse(committedText('tenerife'))));
+  it(`lies within ${CHECK_TOLERANCE} px of the committed paths, with the rest of the file byte-equal`, () => {
+    const { sameOtherwise, paths } = compareGeometry(built, committedText('tenerife'));
     expect(sameOtherwise).toBe(true);
     for (const { path, distance } of paths) expect(distance, path).toBeLessThanOrEqual(CHECK_TOLERANCE);
+  });
+
+  it('keeps the reference’s half-cell shift: the coast sits where the committed one does', () => {
+    // Measured within 0.02 px. "Fixing" the shift moves it about 0.4 px, which the Hausdorff tolerance alone would let through.
+    const committed = GeometrySchema.parse(JSON.parse(committedText('tenerife')));
+    const a = centroid(outline(built.island));
+    const b = centroid(outline(committed.island));
+    expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeLessThan(0.1);
   });
 
   it('runs the coast, ring-2 and ring-4 clockwise on screen', () => {

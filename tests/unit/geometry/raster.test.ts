@@ -1,18 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { Point } from '../../../src/shared/geo.js';
 import { contour } from '../../../scripts/geometry/contour.js';
 import { rasterise } from '../../../scripts/geometry/raster.js';
+import { square } from './helpers.js';
 
 /* The coast fill replaces the canvas `fill()`: cell (i, j) covers
    [i, i+1] × [j, j+1] like a canvas pixel, and holds the fraction of it the
    polygon covers (nonzero rule), sampled on sub-scanlines in y and exact in x. */
-
-const square = (x0: number, y0: number, x1: number, y1: number): Point[] => [
-  { x: x0, y: y0 },
-  { x: x1, y: y0 },
-  { x: x1, y: y1 },
-  { x: x0, y: y1 },
-];
 
 describe('rasterise', () => {
   it('fills a unit square into exactly its own cell', () => {

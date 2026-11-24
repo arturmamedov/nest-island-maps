@@ -1,15 +1,11 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { fitProjection, isOnLand, parsePolygons, pathPolygons, pointInPolygons, project, unproject } from '../../src/shared/geo.js';
-import { ISLAND_IDS, type IslandId } from '../../src/shared/schema.js';
+import { ISLAND_IDS } from '../../src/shared/schema.js';
 import { ISLANDS } from '../../src/shared/islands.js';
 import { ISLAND_CONFIG } from '../../scripts/geometry/config.js';
+import { rawCoastlines } from './geometry/helpers.js';
 
-const ROOT = join(import.meta.dirname, '..', '..');
-const raw = JSON.parse(
-  readFileSync(join(ROOT, 'design_handoff_island_maps/tools/raw-osm-coastlines.json'), 'utf8'),
-) as Record<IslandId, [number, number][]>;
+const raw = rawCoastlines();
 
 describe('projection', () => {
   for (const id of ISLAND_IDS) {
