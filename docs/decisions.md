@@ -190,11 +190,11 @@ M6: `npm run geometry` rebuilds each island's coast and four halo rings from the
   - `npm run geometry` builds all three islands into `test-results/geometry/`: each `.geo.json` in the committed shape, and an overlay SVG.
   - `-- --check` does the same, then compares with `data/geometry/`. It prints each path's distance and where it occurs, and exits 1 on a failure.
   - `-- --write <island>…` replaces the named islands' files in `data/geometry/`, only when the owner asks. It must name them, so adding an island never rewrites the ones that exist, and it writes only once every island has built. With `--check` it is refused, as is any argument it doesn't expect.
-  - The first line printed names the mode: npm can drop the `--` before a flag, and a check that ran as a plain build would look like a pass.
+  - The first line printed names the mode. A flag npm kept for itself (`npm run geometry --check`, without the `--`, sets `npm_config_check` and hands the script nothing) is refused with the right command, since a check that ran as a plain build would look like a pass.
 - **`fitProjection` is reused, so there is no `scripts/geometry/fit.ts`.** `src/shared/geo.ts` already mirrors the reference's fit operation for operation, and reproduces the three committed projections bit for bit. `tests/unit/geo.test.ts` now takes the boxes from `scripts/geometry/config.ts`, their one home.
 - **Modules:** `config`, `raster`, `blur`, `contour`, `edt`, `simplify` and `path` as planned, plus `compare` (the Hausdorff check), `island` (the pipeline and the file shape) and `overlay`. `contour` returns grid coordinates, and the pipeline maps them to the artboard before simplifying; the reference did both in one function.
 - **The grid and its half-cell shift are the reference's:** artboard −300…1380 at 1.25 cells per pixel (2100 × 2100). Cells are centred on i + ½, as canvas pixels are, while marching squares reads sample i as coordinate i. So every traced path sits about 0.4 px up and left of its raw coast. The committed files carry that shift, and the port keeps it on purpose; without it, it would start 0.57 px away from them.
-- **The coast fill** uses the nonzero rule, with 16 sub-scanlines per cell row and exact horizontal coverage. The factor barely matters: 16 and 64 give the same paths to 0.001 px, and 4 moves one ring by 0.06 px.
+- **The coast fill** uses the nonzero rule, with 16 sub-scanlines per cell row and exact horizontal coverage. The factor barely matters. Measured against the committed paths, 16 and 64 give the same distances to 0.001 px on every path; at 4, only Gran Canaria's ring-3 moves (0.740 → 0.680 px).
 - **The blur can't be the reference's.** It was `ctx.filter = 'blur(σpx)'`, which each browser approximates its own way, stored as 8-bit alpha. This is the Gaussian that filter stands for:
   - σ in grid cells (2.2; Ibiza 4.2);
   - truncated at ⌈3σ⌉ and normalised;
@@ -208,7 +208,7 @@ M6: `npm run geometry` rebuilds each island's coast and four halo rings from the
 - **Direction and start come from the walk.** Every path, committed and rebuilt, runs clockwise on screen from its topmost row. Rings 1 and 3 trace at exact ties (10 and 60 cells) and start on tie vertices, where the reference's walk can turn counter-clockwise (`tests/unit/geometry/contour.test.ts` pins that on a disc). On these three islands none does. It is kept, not "fixed".
 - **The check:**
   - Each rebuilt path is held to its committed one by the symmetric Hausdorff distance. It samples every 0.1 px against the other path's segments, so it can read up to 0.05 px low.
-  - Everything that isn't a path must be byte-equal. So the projection, which the seeds copy, can't drift, and neither can the name, source and note, which `config.ts` copies from the committed files as generator inputs.
+  - Everything that isn't a path must be byte-equal to the committed text, read by `JSON.parse` alone, so key order and any extra key count too. So the projection, which the seeds copy, can't drift, and neither can the name, source and note, which `config.ts` copies from the committed files as generator inputs.
   - The tolerance is the plan's 1.5 px, since every island measures under it:
 
   | px | coast | ring-1 | ring-2 | ring-3 | ring-4 |
@@ -227,3 +227,15 @@ M6: `npm run geometry` rebuilds each island's coast and four halo rings from the
 
   The reference also plotted test points; the editor's "In the sea" badge does that job now.
 - **The output is exactly the committed shape,** validated by `GeometrySchema`: `JSON.stringify`, one line, no trailing newline, keys `island, name, artboard, source, projection{type, s, lamC, mC, cx, cy, note}, rings[{id, offsetPx, d}]`. The design tool saved `{proj, island, rings}`, which was wrapped by hand; that step is gone.
+
+## Deployment
+
+The owner put the build at **https://nestpass.ai/nestmaps/** (2026-09-30), on the IONOS webhosting. The steps are in `docs/deploy.md`.
+
+- **Static files are enough.** There is no server code: exports, font embedding and autosave all run in the browser, and the relative `base` makes any folder work. A VPS would only matter for a backend (shared saving, a login server).
+- **Public for now** (the owner's choice, 2026-11-24): an MVP demo, with no staff password. Nothing is stored on the server, and edits stay in each visitor's browser. The flyers app's password block can be pasted at the top of `.htaccess` later.
+- **Never indexed, said three ways:** nestpass.ai's root `robots.txt` (the shared Nests-tools file) asks every crawler to stay out; each page carries `<meta name="robots" content="noindex, nofollow">`; and `public/.htaccess` sends `X-Robots-Tag` on every answer, because a `robots.txt` counts only at a domain's root.
+- **Caching:** hashed assets are kept for a year (`immutable`), and the pages are re-checked on every visit (`no-cache`, a 304 when unchanged), so an update reaches everyone on their next visit. A render test reads the `FilesMatch` pattern from the built `.htaccess` and checks it matches every asset and neither page.
+- **Uploads go over the old files, never after deleting `assets/`:** a page already open loads the export code (a lazy chunk) under its old name.
+- **http goes to https** in `.htaccess`, since the domain doesn't redirect this folder itself. The path comes from `THE_REQUEST`, as in the flyers app, because IONOS has MultiViews on.
+- **Only what IONOS accepts** in `.htaccess`: headers, rewrites and `FilesMatch`. An `Options`, `php_flag` or `<If>` line makes the host answer every page with a 403, so a unit test refuses all three.

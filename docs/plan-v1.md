@@ -1,6 +1,6 @@
 # Nest Island Maps — v1 implementation plan
 
-> **Status:** approved by the owner on 2026-09-27. M1 done on 2026-09-27 (branch `feat/v1`, commits `c10c8f2`…`3539c25`). M2 done on 2026-09-28 (commits `ec13684`…`8f8e48e`). M3 done on 2026-09-28 (commits `9f5755d`…`b8f74e2`). M4 done on 2026-09-28 (commits `402aba7`…`5e96c51`). M5 done on 2026-09-28 (commits `eed6009`…`5d231ba`). M6 done on 2026-09-29 (commits `5b2ea01`…`46046f6`), and with it v1 is complete.
+> **Status:** approved by the owner on 2026-09-27. M1 done on 2026-09-27 (branch `feat/v1`, commits `c10c8f2`…`3539c25`). M2 done on 2026-09-28 (commits `ec13684`…`8f8e48e`). M3 done on 2026-09-28 (commits `9f5755d`…`b8f74e2`). M4 done on 2026-09-28 (commits `402aba7`…`5e96c51`). M5 done on 2026-09-28 (commits `eed6009`…`5d231ba`). M6 done on 2026-09-29 (commits `5b2ea01`…`46046f6`), and with it v1 is complete. Deployed by the owner at https://nestpass.ai/nestmaps/ on 2026-09-30; the deploy kit (noindex, caching, https, `docs/deploy.md`) followed on 2026-11-24, with the M6 review fixes.
 
 ## Context
 
